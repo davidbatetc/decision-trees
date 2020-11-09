@@ -135,8 +135,8 @@ generateDT' unused sps' clMode' clModeCount'
   where
     newTree (val, app, class') = (val, generateDT' newUnused (cleanSps val) class' app)
     newUnused = filter (bestAttrId /=) unused
-    cleanSps val = filter (notSpMatchesVal val) sps'
-    notSpMatchesVal val (Specimen _ ys) = (ys !! bestAttrId) /= val
+    cleanSps val = filter (spMatchesVal val) sps'
+    spMatchesVal val (Specimen _ ys) = (ys !! bestAttrId) == val
     bestAttrId = snd $ head $ createAccList appsList
     branchingList = createBranchingList . (\(Just x) -> x) $ lookup bestAttrId appsList
     appsList = createAppsList unused sps'
