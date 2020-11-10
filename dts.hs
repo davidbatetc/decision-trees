@@ -1,11 +1,7 @@
 --So as to use group and sort
 import           Data.List
-
-main :: IO ()
-main = do
-    contents <- readFile "agaricus-lepiota.data"
-    putStrLn contents
-
+--So as to use liftM2
+import           Control.Monad
 
 {-Examples to run
 Node "cap-color" [("brown",Leaf "poisonous"),("yellow",Leaf "edible"),("white",Node "cap-shape" [("bell",Leaf "edible"),("convex",Leaf "poisonous")])]
@@ -62,8 +58,8 @@ readSpecimen sep str = Specimen (read $ head splitStr) (map read (tail splitStr)
 -- character sep. Note that in this case "x,y,z" will give (Specimen x [y,z]),
 -- whereas with readSpecimen, in order to obtain the same result, we would have
 -- to write readSpecimen "\'x\',\'y\',\'z\'" :: Specimen Char Char.
-readSpecimenCC :: Char -> String -> Specimen Char Char
-readSpecimenCC sep str = Specimen (unpack $ head splitStr) (map unpack $ tail splitStr)
+readSpecimenCc :: Char -> String -> Specimen Char Char
+readSpecimenCc sep str = Specimen (unpack $ head splitStr) (map unpack $ tail splitStr)
   where
     splitStr = wordsCustom sep str
     unpack [x] = x  --We could have used head instead, but it would have matched
@@ -147,3 +143,21 @@ generateDT sps = generateDT' [0..nAttrs sps - 1] sps clMode clModeCount
   where
     nAttrs (Specimen _ ys : _) = length ys
     (clModeCount, clMode) = findNCountClassMode sps
+
+
+classifySpecimen :: (Eq b, Show a, Read b) => DT a b -> IO String
+classifySpecimen (Leaf class')    = return (show class')
+classifySpecimen (Node name list) = liftM2 (++) (return ("Which " ++ show name ++ "?\n")) nextOne
+  where
+    nextOne = getLine >>= (\val -> classifySpecimen $ (\(Just x) -> x) $ lookup (read val) list)
+
+--main :: IO ()
+--main = readFile "agaricus-lepiota.data" >>= print . generateDT . map (readSpecimenCc ',') . lines
+
+main :: IO ()
+main = do
+    content <- readFile "test.data"
+    interaction <- classifySpecimen (readSpecimenCcList content)
+    putStrLn interaction
+  where
+    readSpecimenCcList = generateDT . map (readSpecimenCc ',') . lines
