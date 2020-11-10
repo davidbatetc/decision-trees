@@ -5,11 +5,6 @@ import           Data.List
 Node "cap-color" [("brown",Leaf "poisonous"),("yellow",Leaf "edible"),("white",Node "cap-shape" [("bell",Leaf "edible"),("convex",Leaf "poisonous")])]
 [Specimen "poisonous" ["convex", "brown", "black"], Specimen "edible" ["convex", "yellow", "black"], Specimen "edible" ["bell", "white", "brown"], Specimen "poisonous" ["convex", "white", "brown"], Specimen "edible" ["convex", "yellow", "brown"], Specimen "edible" ["bell", "white", "brown"], Specimen "poisonous" ["convex", "white", "pink"]]
 [Specimen "edible" ["bell", "brown"], Specimen "poisonous" ["convex", "brown"], Specimen "edible" ["bell", "brown"], Specimen "poisonous" ["convex", "pink"]]
-
---This one fails! We need to gather the values of all the possible attributes
--- somewhere, so that no branches are deleted due to lack of specimens in the
--- branches corresponding to some attributes
-generateDT [Specimen 'A' [1, 2], Specimen 'B' [1, 2]]
 -}
 
 data Specimen a b = Specimen a [b]
