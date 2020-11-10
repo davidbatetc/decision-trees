@@ -1,7 +1,5 @@
 --So as to use group and sort
 import           Data.List
---So as to use liftM2
-import           Control.Monad
 
 {-Examples to run
 Node "cap-color" [("brown",Leaf "poisonous"),("yellow",Leaf "edible"),("white",Node "cap-shape" [("bell",Leaf "edible"),("convex",Leaf "poisonous")])]
