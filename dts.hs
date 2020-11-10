@@ -146,18 +146,35 @@ generateDT sps = generateDT' [0..nAttrs sps - 1] sps clMode clModeCount
 
 
 classifySpecimen :: (Eq b, Show a, Read b) => DT a b -> IO String
-classifySpecimen (Leaf class')    = return (show class')
-classifySpecimen (Node name list) = liftM2 (++) (return ("Which " ++ show name ++ "?\n")) nextOne
-  where
-    nextOne = getLine >>= (\val -> classifySpecimen $ (\(Just x) -> x) $ lookup (read val) list)
+classifySpecimen (Leaf class')    = return $ "\x1b[31;1mPrediction: \x1b[0m" ++ show class'
+classifySpecimen (Node name list) = do
+    putStrLn $ "\x1b[32;1mWhich " ++ show name ++ "?\x1b[0m"
+    val <- getLine
+    classifySpecimen $ (\(Just x) -> x) $ lookup (read val) list
 
---main :: IO ()
---main = readFile "agaricus-lepiota.data" >>= print . generateDT . map (readSpecimenCc ',') . lines
+
+classifySpecimenCc :: DT Char Char -> IO String
+classifySpecimenCc (Leaf class')    = return $ "\x1b[31;1mPrediction: \x1b[0m" ++ [class']
+classifySpecimenCc (Node name list) = do
+    putStrLn $ "\x1b[32;1mWhich " ++ show name ++ "?\x1b[0m"
+    val <- getLine
+    classifySpecimenCc $ (\(Just x) -> x) $ lookup ((\[x] -> x) val) list
+
+
+--Provided as an example, not used
+generalizedMain :: String -> IO ()
+generalizedMain fileName = do
+    content <- readFile fileName
+    interaction <- classifySpecimen (readSpecimenList content :: DT String (Int, String))
+    putStrLn interaction
+  where
+    readSpecimenList = generateDT . map (readSpecimen ';') . lines
+
 
 main :: IO ()
 main = do
-    content <- readFile "test.data"
-    interaction <- classifySpecimen (readSpecimenCcList content)
+    content <- readFile "agaricus-lepiota.data"
+    interaction <- classifySpecimenCc (readSpecimenCcList content)
     putStrLn interaction
   where
     readSpecimenCcList = generateDT . map (readSpecimenCc ',') . lines
