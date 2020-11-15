@@ -8,6 +8,7 @@ merge' (<) (==) (zip [1, 1, 1, 1, 2, 3, 4] [1, 1, 1, 1, 1, 1, 1]) (zip [1, 1, 1,
 {-Benchmarking
 Version with naïve merge-group sort: 4.45s
 Version with optimized merge-group sort: 2.17s
+Version with optimized access: 1.6s
 -}
 
 
@@ -119,17 +120,17 @@ mgsortBy comp (w:ws) = mergeAll $ map (:[]) (spanCount ws w 1)
 -- 2. class: is one of the possible classes.
 -- 3. appearances: is the number of appearances of the combination class-value
 --   in the list of Specimens provided.
-createAppsList :: (Ord a, Ord b) => [Int] -> [Specimen a b] -> [(Int, [(Int, (b, a))])]
-createAppsList unused sps = createAppsList' attrsMat unused 0
+createAppsList :: (Ord a, Ord b) => [Specimen a b] -> [[(Int, (b, a))]]
+createAppsList sps = createAppsList' attrsMat
   where
     cls = map (\(Specimen cl _) -> cl) sps
     attrsMat = map (\(Specimen _ attrs) -> attrs) sps
 
-    createAppsList' _ [] _ = []
-    createAppsList' attrsMat' (i:is) j
-        | i == j      = (i, singleList $ map head attrsMat') : createAppsList' tailAttrsMat is (j + 1)
-        | otherwise   = createAppsList' tailAttrsMat (i:is) (j + 1)
-      where tailAttrsMat = map tail attrsMat'
+    createAppsList' [] = []
+    createAppsList' attrsMat'
+      | null $ head attrsMat'   = []
+      | otherwise
+      =    singleList (map head attrsMat') : createAppsList' (map tail attrsMat')
 
     singleList = msortBy customOrder . mgsortBy compare . flip zip cls
     customOrder (app1, (val1, _)) (app2, (val2, _))
@@ -139,10 +140,9 @@ createAppsList unused sps = createAppsList' attrsMat unused 0
 
 
 --Chooses the best attribute
-chooseBestAttrId :: (Ord a, Ord b) => [(Int, [(Int, (b, a))])] -> Int
-chooseBestAttrId ws = snd $ maximum $ map appAttrIdPair ws
+chooseBestAttrId :: (Ord a, Ord b) => [[(Int, (b, a))]] -> Int
+chooseBestAttrId ws = snd $ maximum $ zip (map countFirstApp ws) [0..length ws - 1]
   where
-    appAttrIdPair (attrId, zs) = (countFirstApp zs, attrId)
     countFirstApp [] = 0
     countFirstApp ((app, (val, _)):zs')
         = app + countFirstApp (dropWhile (\(_, (v, _)) -> v == val) zs')
@@ -164,36 +164,42 @@ findNCountClassMode :: (Ord a) => [Specimen a b] -> (Int, a)
 findNCountClassMode = maximum . mgsortBy compare . map (\(Specimen x _) -> x)
 
 
-generateDT' :: (Ord a, Ord b) => [Int] -> [Specimen a b] -> a -> Int -> DT a b
+removeNth :: [a] -> Int -> [a]
+removeNth xs n = removeNth' xs n 0
+  where
+    removeNth' [] _ _ = []
+    removeNth' (y:ys) m i
+      | i == n      = ys
+      | otherwise   = y : removeNth' ys m (i + 1)
+
+
+generateDT' :: (Ord a, Ord b) => [String] -> [Specimen a b] -> a -> Int -> DT a b
 generateDT' [] _ clMode' _ = Leaf clMode'
-generateDT' unused sps' clMode' clModeCount'
+generateDT' attrNames sps' clMode' clModeCount'
     | length sps' == clModeCount'   = Leaf clMode'
     | otherwise
-    =   Node ("Attribute " ++ show bestAttrId) (map newTree branchingList)
+    =   Node (attrNames !! bestAttrId) (map newTree branchingList)
   where
-    newTree (app, (val, cl)) = (val, generateDT' newUnused (cleanSps val) cl app)
-    newUnused = filter (bestAttrId /=) unused
-    cleanSps val = filter (spMatchesVal val) sps'
+    newTree (app, (val, cl)) = (val, generateDT' newAttrNames (cleanSps val) cl app)
+    cleanSps val = removeVals $ filter (spMatchesVal val) sps'
     spMatchesVal val (Specimen _ ys) = (ys !! bestAttrId) == val
+    removeVals = map (\(Specimen x ys) -> Specimen x (removeNth ys bestAttrId))
+    newAttrNames = removeNth attrNames bestAttrId
 
-    branchingList = createBranchingList . (\(Just x) -> x) . lookup bestAttrId $ appsList
+    branchingList = createBranchingList (appsList !! bestAttrId)
     bestAttrId = chooseBestAttrId appsList
-    appsList = createAppsList unused sps'
+    appsList = createAppsList sps'
 
 
-generateDT :: (Ord a, Ord b) => [Specimen a b] -> DT a b
-generateDT sps = generateDT' [0..nAttrs sps - 1] sps clMode clModeCount
-  where
-    --Pattern match is not exhaustive deliberately, since we cannot generate
-    -- a DT without a list of specimens
-    nAttrs (Specimen _ ys : _) = length ys
-    (clModeCount, clMode) = findNCountClassMode sps
+generateDT :: (Ord a, Ord b) => [String] -> [Specimen a b] -> DT a b
+generateDT attrNames sps = generateDT' attrNames sps clMode clModeCount
+  where (clModeCount, clMode) = findNCountClassMode sps
 
 
 classifySpecimen :: (Eq b, Show a, Read b) => DT a b -> IO String
 classifySpecimen (Leaf cl)    = return $ "\x1b[31;1mPrediction: \x1b[0m" ++ show cl
 classifySpecimen (Node name list) = do
-    putStrLn $ "\x1b[32;1mWhich " ++ show name ++ "?\x1b[0m"
+    putStrLn $ "\x1b[32;1mWhich " ++ name ++ "?\x1b[0m"
     val <- getLine
     classifySpecimen $ (\(Just x) -> x) $ lookup (read val) list
 
@@ -201,7 +207,7 @@ classifySpecimen (Node name list) = do
 classifySpecimenCc :: DT Char Char -> IO String
 classifySpecimenCc (Leaf cl)    = return $ "\x1b[31;1mPrediction: \x1b[0m" ++ [cl]
 classifySpecimenCc (Node name list) = do
-    putStrLn $ "\x1b[32;1mWhich " ++ show name ++ "?\x1b[0m"
+    putStrLn $ "\x1b[32;1mWhich " ++ name ++ "?\x1b[0m"
     val <- getLine
     classifySpecimenCc $ (\(Just x) -> x) $ lookup ((\[x] -> x) val) list
 
@@ -213,7 +219,10 @@ generalizedMain fileName = do
     interaction <- classifySpecimen (readSpecimenList content :: DT String (Int, String))
     putStrLn interaction
   where
-    readSpecimenList = generateDT . map (readSpecimen ';') . lines
+    readSpecimenList content' = generateDT attrNames sps
+      where
+        sps = map (readSpecimen ';') $ lines content'
+        attrNames = ["Attribute " ++ show i | i <- [1..length sps]]
 
 
 showTree :: String -> IO (DT Char Char)
@@ -221,7 +230,10 @@ showTree fileName = do
     content <- readFile fileName
     return $ readSpecimenCcList content
   where
-    readSpecimenCcList = generateDT . map (readSpecimenCc ',') . lines
+    readSpecimenCcList content' = generateDT attrNames sps
+      where
+        sps = map (readSpecimenCc ',') $ lines content'
+        attrNames = ["Attribute " ++ show i | i <- [1..length sps]]
 
 
 main :: IO ()
@@ -230,4 +242,13 @@ main = do
     interaction <- classifySpecimenCc (readSpecimenCcList content)
     putStrLn interaction
   where
-    readSpecimenCcList = generateDT . map (readSpecimenCc ',') . lines
+    readSpecimenCcList content' = generateDT attrNames sps
+      where
+        sps = map (readSpecimenCc ',') $ lines content'
+        attrNames = ["cap-shape", "cap-surface", "cap-color"
+            , "bruises?", "odor", "gill-attachment", "gill-spacing"
+            , "gill-size", "gill-color", "stalk-shape"
+            , "stalk-root", "stalk-surface-bove-ring"
+            , "stalk-color-above-ring", "stalk-color-below-ring"
+            , "veil-type", "veil-color", "ring-number", "ring-type"
+            , "spore-print-color", "population", "habitat"]
