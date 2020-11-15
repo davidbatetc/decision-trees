@@ -6,6 +6,7 @@ import           Data.List
 Node "cap-color" [("brown",Leaf "poisonous"),("yellow",Leaf "edible"),("white",Node "cap-shape" [("bell",Leaf "edible"),("convex",Leaf "poisonous")])]
 [Specimen "poisonous" ["convex", "brown", "black"], Specimen "edible" ["convex", "yellow", "black"], Specimen "edible" ["bell", "white", "brown"], Specimen "poisonous" ["convex", "white", "brown"], Specimen "edible" ["convex", "yellow", "brown"], Specimen "edible" ["bell", "white", "brown"], Specimen "poisonous" ["convex", "white", "pink"]]
 [Specimen "edible" ["bell", "brown"], Specimen "poisonous" ["convex", "brown"], Specimen "edible" ["bell", "brown"], Specimen "poisonous" ["convex", "pink"]]
+merge' (<) (==) (zip [1, 1, 1, 1, 2, 3, 4] [1, 1, 1, 1, 1, 1, 1]) (zip [1, 1, 1, 2, 2, 3] [1, 1, 1, 1, 1, 1])
 -}
 
 data Specimen a b = Specimen a [b]
@@ -72,9 +73,27 @@ split (x:y:zs) = (x : xs, y : ys)
 merge :: (Ord a) => (a -> a -> Bool) -> [a] -> [a] -> [a]
 merge _ [] ms = ms
 merge _ ns [] = ns
-merge comp (n : ns) (m : ms)
-  | comp n m  = n : merge comp ns (m : ms)
-  | otherwise  = m : merge comp (n : ns) ms
+merge comp (n:ns) (m:ms)
+  | comp n m   = n : merge comp ns (m:ms)
+  | otherwise  = m : merge comp (n:ns) ms
+
+
+merge' :: (Ord a) => (a -> a -> Bool) -> (a -> a -> Bool)
+    -> [(a, Int)] -> [(a, Int)] -> [(a, Int)]
+merge' _ _ [] xcs = xcs
+merge' _ _ ycs [] = ycs
+merge' comp eq ((x, c1):xcs) ((y, c2):ycs)
+    | eq x y      = (x, c1' + c2') : merge' comp eq xcs' ycs'
+    | comp x y    = (x, c1') : merge' comp eq xcs' ((y, c2'):ycs')
+    | otherwise   = (y, c2') : merge' comp eq ((x, c1'):xcs') ycs'
+  where
+    (c1', xcs') = span' (eq x) ((x, c1):xcs)
+    (c2', ycs') = span' (eq y) ((y, c2):ycs)
+    span' _ [] = (0, [])
+    span' cond ((z, c):zcs)
+        | cond z      = (c + c', zcs')
+        | otherwise   = (0, (z, c) : zcs)
+      where (c', zcs') = span' cond zcs
 
 
 --Given a comparison function, runs merge sort on a given list
@@ -86,10 +105,21 @@ msortBy comp xs = merge comp (msortBy comp left) (msortBy comp right)
     (left, right) = split xs
 
 
+msortBy' :: (Ord a) => (a -> a -> Bool) -> (a -> a -> Bool)
+    -> [a] -> [(a, Int)]
+msortBy' comp eq xs = msortBy'' $ zip xs (replicate (length xs) 1)
+  where
+    msortBy'' [] = []
+    msortBy'' [xc] = [xc]
+    msortBy'' xcs = merge' comp eq (msortBy'' left) (msortBy'' right)
+      where
+        (left, right) = split xcs
+
+
 --(Eq a) suffices, using (Ord a) is a too strong condition
 --Returns the most common element in a list
 findNCountMode :: (Ord a) => [a] -> (Int, a)
-findNCountMode = maximum . groupNcount . sort
+findNCountMode = maximum . groupNcount . msortBy (<)
   where
     groupNcount [] = []
     groupNcount (y:ys) = (length zs, y) : groupNcount zs'
@@ -111,16 +141,16 @@ findNCountClassMode sps = findNCountMode (map getClass sps)
 createAppsList :: (Ord a, Ord b) => [Int] -> [Specimen a b] -> [(Int, [(b, Int, a)])]
 createAppsList unused sps = map gathered unused
   where
-    gathered attrId = (attrId, sortBy customOrder $ groupedBag attrId)
-    groupedBag attrId = groupNcount $ sort $ map (classValPair attrId) sps
+    gathered attrId = (attrId, msortBy customOrder $ groupedBag attrId)
+    groupedBag attrId = groupNcount $ msortBy (<) $ map (classValPair attrId) sps
     classValPair attrId (Specimen x ys) = (ys !! attrId, x)
     groupNcount [] = []
     groupNcount ((val, cl):zs) = (val, length ys + 1, cl) : groupNcount ys'
       where (ys, ys') = span (== (val, cl)) zs
     customOrder (val1, app1, _) (val2, app2, _)
-        | val1 < val2                       = LT
-        | (val1 == val2) && (app1 >= app2)  = LT
-        | otherwise                         = GT
+        | val1 < val2                       = True
+        | (val1 == val2) && (app1 >= app2)  = True
+        | otherwise                         = False
 
 
 --Chooses the best attribute
