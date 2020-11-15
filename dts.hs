@@ -174,7 +174,7 @@ removeNth xs n = removeNth' xs n 0
 
 
 generateDT' :: (Ord a, Ord b) => [String] -> [Specimen a b] -> a -> Int -> DT a b
-generateDT' _ (Specimen _ []:_) clMode' _ = Leaf clMode'
+generateDT' [] _ clMode' _ = Leaf clMode'
 generateDT' attrNames sps' clMode' clModeCount'
     | length sps' == clModeCount'   = Leaf clMode'
     | otherwise
