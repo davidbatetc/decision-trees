@@ -2,7 +2,7 @@
 Node "cap-color" [("brown",Leaf "poisonous"),("yellow",Leaf "edible"),("white",Node "cap-shape" [("bell",Leaf "edible"),("convex",Leaf "poisonous")])]
 [Specimen "poisonous" ["convex", "brown", "black"], Specimen "edible" ["convex", "yellow", "black"], Specimen "edible" ["bell", "white", "brown"], Specimen "poisonous" ["convex", "white", "brown"], Specimen "edible" ["convex", "yellow", "brown"], Specimen "edible" ["bell", "white", "brown"], Specimen "poisonous" ["convex", "white", "pink"]]
 [Specimen "edible" ["bell", "brown"], Specimen "poisonous" ["convex", "brown"], Specimen "edible" ["bell", "brown"], Specimen "poisonous" ["convex", "pink"]]
-merge' (<) (==) (zip [1, 1, 1, 1, 2, 3, 4] [1, 1, 1, 1, 1, 1, 1]) (zip [1, 1, 1, 2, 2, 3] [1, 1, 1, 1, 1, 1])
+[Specimen "edible" ["pink", "convex"], Specimen "poisonous" ["pink", "convex"], Specimen "edible" ["blue", "convex"]]
 -}
 
 {-Benchmarking
@@ -130,7 +130,7 @@ createAppsList sps = createAppsList' attrsMat
     createAppsList' attrsMat'
       | null $ head attrsMat'   = []
       | otherwise
-      =    singleList (map head attrsMat') : createAppsList' (map tail attrsMat')
+      =   singleList (map head attrsMat') : createAppsList' (map tail attrsMat')
 
     singleList = msortBy customOrder . mgsortBy compare . flip zip cls
     customOrder (app1, (val1, _)) (app2, (val2, _))
@@ -143,9 +143,13 @@ createAppsList sps = createAppsList' attrsMat
 chooseBestAttrId :: (Ord a, Ord b) => [[(Int, (b, a))]] -> Int
 chooseBestAttrId ws = snd $ maximum $ zip (map countFirstApp ws) [0..length ws - 1]
   where
-    countFirstApp [] = 0
-    countFirstApp ((app, (val, _)):zs')
-        = app + countFirstApp (dropWhile (\(_, (v, _)) -> v == val) zs')
+    countFirstApp [] = (0, 0)
+    countFirstApp ((app, (val, _)):zs)
+        | null zs'    = (app' + app, superAcc' + app)
+        | otherwise   = (app' + app, superAcc')
+      where
+        (zs', zs'') = span (\(_, (v, _)) -> v == val) zs
+        (app', superAcc') = countFirstApp zs''
 
 
 --Creates a list choosing only the information of the most common class
