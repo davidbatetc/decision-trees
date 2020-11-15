@@ -7,4 +7,6 @@
 -   [x] Think about **heuristics** for deciding the best attribute for branching when constructing the tree.
 -   [x] **Optimize** the construction of the decision tree.
 -   [ ] Implement the best (subjective) **heuristic** for branching.
--   [ ] Implement **safety** with Maybe
+-   [ ] Implement **safety** with Maybe.
+-   [ ] Document the code with comments
+-   [ ] Write a proper README.md
