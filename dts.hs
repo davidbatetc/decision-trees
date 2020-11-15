@@ -2,7 +2,7 @@
 Node "cap-color" [("brown",Leaf "poisonous"),("yellow",Leaf "edible"),("white",Node "cap-shape" [("bell",Leaf "edible"),("convex",Leaf "poisonous")])]
 [Specimen "poisonous" ["convex", "brown", "black"], Specimen "edible" ["convex", "yellow", "black"], Specimen "edible" ["bell", "white", "brown"], Specimen "poisonous" ["convex", "white", "brown"], Specimen "edible" ["convex", "yellow", "brown"], Specimen "edible" ["bell", "white", "brown"], Specimen "poisonous" ["convex", "white", "pink"]]
 [Specimen "edible" ["bell", "brown"], Specimen "poisonous" ["convex", "brown"], Specimen "edible" ["bell", "brown"], Specimen "poisonous" ["convex", "pink"]]
-[Specimen "edible" ["convex", "pink"], Specimen "poisonous" ["convex", "pink"], Specimen "edible" ["convex", "blue"], Specimen "poisonous" ["bell", "blue"], Specimen "edible" ["bell", "brown"]]
+[Specimen "edible" ["pink", "convex"], Specimen "poisonous" ["pink", "convex"], Specimen "edible" ["blue", "convex"]]
 -}
 
 {-Benchmarking
