@@ -5,7 +5,6 @@
 -   [x] Complete a **first rough version** of the program.
 -   [x] Completely **finish specimen classification** with user interaction.
 -   [x] Think about **heuristics** for deciding the best attribute for branching when constructing the tree.
--   [ ] **Optimize** the construction of the decision tree.
--   [x] ~Consider **all the attributes when branching** (even those that do not have a specimen in that sub-tree).~
+-   [x] **Optimize** the construction of the decision tree.
 -   [ ] Implement the best (subjective) **heuristic** for branching.
--   [ ] Implement safety with Maybe
+-   [ ] Implement **safety** with Maybe
