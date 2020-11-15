@@ -1,2 +1,5 @@
 # Ignoring file with the explanation of the data file
 agaricus-lepiota.names
+dts
+dts.hi
+dts.o
