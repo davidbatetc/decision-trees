@@ -35,7 +35,7 @@ instance (Show a, Show b) => Show (DT a b) where
 --The words function generalized so that it takes the character separing each
 -- of the words as an argument
 wordsCustom :: Char -> String -> [String]
-wordsCustom sep str = words $ map replace str
+wordsCustom sep = words . map replace
   where
     replace char
         | char == sep   = ' '
@@ -96,28 +96,18 @@ mergeGroup comp ((c1, x):cxs) ((c2, y):cys)
 
 mgsortBy :: (Ord a) => (a -> a -> Ordering) -> [a] -> [(Int, a)]
 mgsortBy _ [] = []
-mgsortBy comp (w:ws) = mergeAll $ map (:[]) (groupNcount ws w 1)
+mgsortBy comp (w:ws) = mergeAll $ map (:[]) (spanCount ws w 1)
   where
-
-    groupNcount [] oldx counter = [(counter, oldx)]
-    groupNcount (x:xs) oldx counter
-        | comp x oldx == EQ   = groupNcount xs oldx (counter + 1)
-        | otherwise           = (counter, oldx) : groupNcount xs x 1
-
+    spanCount [] oldx counter = [(counter, oldx)]
+    spanCount (x:xs) oldx counter
+        | comp x oldx == EQ   = spanCount xs oldx (counter + 1)
+        | otherwise           = (counter, oldx) : spanCount xs x 1
 
     mergeAll []    = []
     mergeAll [cxs] = cxs
     mergeAll cxss  = mergeAll (mergePairs cxss)
     mergePairs (cxs:cys:czss) = mergeGroup comp cxs cys : mergePairs czss
     mergePairs cxs            = cxs
-
-
-
---Returns the number of appearances of the most commont class in
--- a list of specimens, along with the class itself
-findNCountClassMode :: (Ord a) => [Specimen a b] -> (Int, a)
-findNCountClassMode = maximum . mgsortBy compare . map getClass
-  where getClass (Specimen x _) = x
 
 
 --Creates a list in which every element is a pair that contains one of the
@@ -128,20 +118,22 @@ findNCountClassMode = maximum . mgsortBy compare . map getClass
 -- 3. appearances: is the number of appearances of the combination class-value
 --   in the list of Specimens provided.
 createAppsList :: (Ord a, Ord b) => [Int] -> [Specimen a b] -> [(Int, [(Int, (b, a))])]
-createAppsList unused sps = map gathered unused
+createAppsList unused sps = createAppsList' attrsMat unused 0
   where
-    gathered attrId = (attrId, msortBy customOrder $ groupedBag attrId)
-    groupedBag attrId = mgsortBy compare $ map (classValPair attrId) sps
-    classValPair attrId (Specimen x ys) = (ys !! attrId, x)
+    cls = map (\(Specimen cl _) -> cl) sps
+    attrsMat = map (\(Specimen _ attrs) -> attrs) sps
+
+    createAppsList' _ [] _ = []
+    createAppsList' attrsMat' (i:is) j
+        | i == j      = (i, singleList $ map head attrsMat') : createAppsList' tailAttrsMat is (j + 1)
+        | otherwise   = createAppsList' tailAttrsMat (i:is) (j + 1)
+      where tailAttrsMat = map tail attrsMat'
+
+    singleList = msortBy customOrder . mgsortBy compare . flip zip cls
     customOrder (app1, (val1, _)) (app2, (val2, _))
         | val1 < val2                       = LT
         | (val1 == val2) && (app1 >= app2)  = LT
         | otherwise                         = GT
-
-
-createAppsList' :: (Ord a, Ord b) => [Int] -> [Specimen a b] -> [(Int, [(Int, (b, a))])]
-createAppsList' _ _ = []
-
 
 
 --Chooses the best attribute
@@ -164,6 +156,12 @@ createBranchingList ((app, (val, cl)):zs)
     ys = dropWhile (\(_, (v, _)) -> v == val) zs
 
 
+--Returns the number of appearances of the most commont class in
+-- a list of specimens, along with the class itself
+findNCountClassMode :: (Ord a) => [Specimen a b] -> (Int, a)
+findNCountClassMode = maximum . mgsortBy compare . map (\(Specimen x _) -> x)
+
+
 generateDT' :: (Ord a, Ord b) => [Int] -> [Specimen a b] -> a -> Int -> DT a b
 generateDT' [] _ clMode' _ = Leaf clMode'
 generateDT' unused sps' clMode' clModeCount'
@@ -175,14 +173,17 @@ generateDT' unused sps' clMode' clModeCount'
     newUnused = filter (bestAttrId /=) unused
     cleanSps val = filter (spMatchesVal val) sps'
     spMatchesVal val (Specimen _ ys) = (ys !! bestAttrId) == val
+
+    branchingList = createBranchingList . (\(Just x) -> x) . lookup bestAttrId $ appsList
     bestAttrId = chooseBestAttrId appsList
-    branchingList = createBranchingList . (\(Just x) -> x) $ lookup bestAttrId appsList
     appsList = createAppsList unused sps'
 
 
 generateDT :: (Ord a, Ord b) => [Specimen a b] -> DT a b
 generateDT sps = generateDT' [0..nAttrs sps - 1] sps clMode clModeCount
   where
+    --Pattern match is not exhaustive deliberately, since we cannot generate
+    -- a DT without a list of specimens
     nAttrs (Specimen _ ys : _) = length ys
     (clModeCount, clMode) = findNCountClassMode sps
 
