@@ -64,16 +64,16 @@ readSpecimenCc sep str = Specimen (unpack $ head splitStr) (map unpack $ tail sp
                     -- giving unexpected behavior in other parts of the program.
 
 
-merge :: (Ord a) => (a -> a -> Bool) -> [a] -> [a] -> [a]
+merge :: (Ord a) => (a -> a -> Ordering) -> [a] -> [a] -> [a]
 merge _ [] ms = ms
 merge _ ns [] = ns
 merge comp (n:ns) (m:ms)
-  | comp n m   = n : merge comp ns (m:ms)
-  | otherwise  = m : merge comp (n:ns) ms
+  | comp n m == LT  = n : merge comp ns (m:ms)
+  | otherwise       = m : merge comp (n:ns) ms
 
 
 --Given a comparison function, runs merge sort on a given list
-msortBy :: (Ord a) => (a -> a -> Bool) -> [a] -> [a]
+msortBy :: (Ord a) => (a -> a -> Ordering) -> [a] -> [a]
 msortBy _ [] = []
 msortBy comp ws = mergeAll (map (:[]) ws)
   where
@@ -83,31 +83,31 @@ msortBy comp ws = mergeAll (map (:[]) ws)
     mergePairs xs          = xs
 
 
-mergeGroup :: (Ord a) => (a -> a -> Bool) -> (a -> a -> Bool)
-    -> [(Int, a)] -> [(Int, a)] -> [(Int, a)]
-mergeGroup _ _ [] cxs = cxs
-mergeGroup _ _ cys [] = cys
-mergeGroup comp eq ((c1, x):cxs) ((c2, y):cys)
-    | eq x y      = (c1 + c2, x) : mergeGroup comp eq cxs cys
-    | comp x y    = (c1, x) : mergeGroup comp eq cxs ((c2, y):cys)
-    | otherwise   = (c2, y) : mergeGroup comp eq ((c1, x):cxs) cys
+mergeGroup :: (Ord a) => (a -> a -> Ordering) -> [(Int, a)]
+    -> [(Int, a)] -> [(Int, a)]
+mergeGroup _ [] cxs = cxs
+mergeGroup _ cys [] = cys
+mergeGroup comp ((c1, x):cxs) ((c2, y):cys)
+    | compRes == EQ   = (c1 + c2, x) : mergeGroup comp cxs cys
+    | compRes == LT   = (c1, x) : mergeGroup comp cxs ((c2, y):cys)
+    | otherwise        = (c2, y) : mergeGroup comp ((c1, x):cxs) cys
+  where compRes = comp x y
 
 
-mgsortBy :: (Ord a) => (a -> a -> Bool) -> (a -> a -> Bool)
-    -> [a] -> [(Int, a)]
-mgsortBy _ _ []    = []
-mgsortBy comp eq xs = mergeAll (map (\x -> [(1, x)]) xs)
+mgsortBy :: (Ord a) => (a -> a -> Ordering) -> [a] -> [(Int, a)]
+mgsortBy _ []    = []
+mgsortBy comp xs = mergeAll (map (\x -> [(1, x)]) xs)
   where
     mergeAll [cxs] = cxs
     mergeAll cxss  = mergeAll (mergePairs cxss)
-    mergePairs (cxs:cys:czss) = mergeGroup comp eq cxs cys : mergePairs czss
+    mergePairs (cxs:cys:czss) = mergeGroup comp cxs cys : mergePairs czss
     mergePairs cxs            = cxs
 
 
 --Returns the number of appearances of the most commont class in
 -- a list of specimens, along with the class itself
 findNCountClassMode :: (Ord a) => [Specimen a b] -> (Int, a)
-findNCountClassMode = maximum . mgsortBy (<) (==) . map getClass
+findNCountClassMode = maximum . mgsortBy compare . map getClass
   where getClass (Specimen x _) = x
 
 
@@ -122,12 +122,17 @@ createAppsList :: (Ord a, Ord b) => [Int] -> [Specimen a b] -> [(Int, [(Int, (b,
 createAppsList unused sps = map gathered unused
   where
     gathered attrId = (attrId, msortBy customOrder $ groupedBag attrId)
-    groupedBag attrId = mgsortBy (<) (==) $ map (classValPair attrId) sps
+    groupedBag attrId = mgsortBy compare $ map (classValPair attrId) sps
     classValPair attrId (Specimen x ys) = (ys !! attrId, x)
     customOrder (app1, (val1, _)) (app2, (val2, _))
-        | val1 < val2                       = True
-        | (val1 == val2) && (app1 >= app2)  = True
-        | otherwise                         = False
+        | val1 < val2                       = LT
+        | (val1 == val2) && (app1 >= app2)  = LT
+        | otherwise                         = GT
+
+
+createAppsList' :: (Ord a, Ord b) => [Int] -> [Specimen a b] -> [(Int, [(Int, (b, a))])]
+createAppsList' _ _ = []
+
 
 
 --Chooses the best attribute
