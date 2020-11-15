@@ -95,13 +95,22 @@ mergeGroup comp ((c1, x):cxs) ((c2, y):cys)
 
 
 mgsortBy :: (Ord a) => (a -> a -> Ordering) -> [a] -> [(Int, a)]
-mgsortBy _ []    = []
-mgsortBy comp xs = mergeAll (map (\x -> [(1, x)]) xs)
+mgsortBy _ [] = []
+mgsortBy comp (w:ws) = mergeAll $ map (:[]) (groupNcount ws w 1)
   where
+
+    groupNcount [] oldx counter = [(counter, oldx)]
+    groupNcount (x:xs) oldx counter
+        | comp x oldx == EQ   = groupNcount xs oldx (counter + 1)
+        | otherwise           = (counter, oldx) : groupNcount xs x 1
+
+
+    mergeAll []    = []
     mergeAll [cxs] = cxs
     mergeAll cxss  = mergeAll (mergePairs cxss)
     mergePairs (cxs:cys:czss) = mergeGroup comp cxs cys : mergePairs czss
     mergePairs cxs            = cxs
+
 
 
 --Returns the number of appearances of the most commont class in
