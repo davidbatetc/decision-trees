@@ -79,21 +79,13 @@ merge comp (n:ns) (m:ms)
 
 
 merge' :: (Ord a) => (a -> a -> Bool) -> (a -> a -> Bool)
-    -> [(a, Int)] -> [(a, Int)] -> [(a, Int)]
-merge' _ _ [] xcs = xcs
-merge' _ _ ycs [] = ycs
-merge' comp eq ((x, c1):xcs) ((y, c2):ycs)
-    | eq x y      = (x, c1' + c2') : merge' comp eq xcs' ycs'
-    | comp x y    = (x, c1') : merge' comp eq xcs' ((y, c2'):ycs')
-    | otherwise   = (y, c2') : merge' comp eq ((x, c1'):xcs') ycs'
-  where
-    (c1', xcs') = span' (eq x) ((x, c1):xcs)
-    (c2', ycs') = span' (eq y) ((y, c2):ycs)
-    span' _ [] = (0, [])
-    span' cond ((z, c):zcs)
-        | cond z      = (c + c', zcs')
-        | otherwise   = (0, (z, c) : zcs)
-      where (c', zcs') = span' cond zcs
+    -> [(Int, a)] -> [(Int, a)] -> [(Int, a)]
+merge' _ _ [] cxs = cxs
+merge' _ _ cys [] = cys
+merge' comp eq ((c1, x):cxs) ((c2, y):cys)
+    | eq x y      = (c1 + c2, x) : merge' comp eq cxs cys
+    | comp x y    = (c1, x) : merge' comp eq cxs ((c2, y):cys)
+    | otherwise   = (c2, y) : merge' comp eq ((c1, x):cxs) cys
 
 
 --Given a comparison function, runs merge sort on a given list
@@ -106,28 +98,20 @@ msortBy comp xs = merge comp (msortBy comp left) (msortBy comp right)
 
 
 msortBy' :: (Ord a) => (a -> a -> Bool) -> (a -> a -> Bool)
-    -> [a] -> [(a, Int)]
-msortBy' comp eq xs = msortBy'' $ zip xs (replicate (length xs) 1)
+    -> [a] -> [(Int, a)]
+msortBy' comp eq xs = msortBy'' $ zip (replicate (length xs) 1) xs
   where
     msortBy'' [] = []
-    msortBy'' [xc] = [xc]
-    msortBy'' xcs = merge' comp eq (msortBy'' left) (msortBy'' right)
+    msortBy'' [cx] = [cx]
+    msortBy'' cxs = merge' comp eq (msortBy'' left) (msortBy'' right)
       where
-        (left, right) = split xcs
+        (left, right) = split cxs
 
 
---(Eq a) suffices, using (Ord a) is a too strong condition
---Returns the most common element in a list
-findNCountMode :: (Ord a) => [a] -> (Int, a)
-findNCountMode = maximum . groupNcount . msortBy (<)
-  where
-    groupNcount [] = []
-    groupNcount (y:ys) = (length zs, y) : groupNcount zs'
-      where (zs, zs') = span (== y) ys
-
-
+--Returns the number of appearances of the most commont class in
+-- a list of specimens, along with the class itself
 findNCountClassMode :: (Ord a) => [Specimen a b] -> (Int, a)
-findNCountClassMode sps = findNCountMode (map getClass sps)
+findNCountClassMode = maximum . msortBy' (<) (==) . map getClass
   where getClass (Specimen x _) = x
 
 
@@ -138,39 +122,36 @@ findNCountClassMode sps = findNCountMode (map getClass sps)
 -- 2. class: is one of the possible classes.
 -- 3. appearances: is the number of appearances of the combination class-value
 --   in the list of Specimens provided.
-createAppsList :: (Ord a, Ord b) => [Int] -> [Specimen a b] -> [(Int, [(b, Int, a)])]
+createAppsList :: (Ord a, Ord b) => [Int] -> [Specimen a b] -> [(Int, [(Int, (b, a))])]
 createAppsList unused sps = map gathered unused
   where
     gathered attrId = (attrId, msortBy customOrder $ groupedBag attrId)
-    groupedBag attrId = groupNcount $ msortBy (<) $ map (classValPair attrId) sps
+    groupedBag attrId = msortBy' (<) (==) $ map (classValPair attrId) sps
     classValPair attrId (Specimen x ys) = (ys !! attrId, x)
-    groupNcount [] = []
-    groupNcount ((val, cl):zs) = (val, length ys + 1, cl) : groupNcount ys'
-      where (ys, ys') = span (== (val, cl)) zs
-    customOrder (val1, app1, _) (val2, app2, _)
+    customOrder (app1, (val1, _)) (app2, (val2, _))
         | val1 < val2                       = True
         | (val1 == val2) && (app1 >= app2)  = True
         | otherwise                         = False
 
 
 --Chooses the best attribute
-chooseBestAttrId :: (Ord a, Ord b) => [(Int, [(b, Int, a)])] -> Int
+chooseBestAttrId :: (Ord a, Ord b) => [(Int, [(Int, (b, a))])] -> Int
 chooseBestAttrId ws = snd $ maximum $ map appAttrIdPair ws
   where
     appAttrIdPair (attrId, zs) = (countFirstApp zs, attrId)
     countFirstApp [] = 0
-    countFirstApp ((val, app, _):zs')
-        = app + countFirstApp (dropWhile (\(v, _, _) -> v == val) zs')
+    countFirstApp ((app, (val, _)):zs')
+        = app + countFirstApp (dropWhile (\(_, (v, _)) -> v == val) zs')
 
 
 --Creates a list choosing only the information of the most common class
 -- for each of the values
-createBranchingList :: (Ord a, Ord b) => [(b, Int, a)] -> [(b, Int, a)]
+createBranchingList :: (Ord a, Ord b) => [(Int, (b, a))] -> [(Int, (b, a))]
 createBranchingList [] = []
-createBranchingList ((val, app, cl):zs)
-    = (val, app, cl) : createBranchingList ys
+createBranchingList ((app, (val, cl)):zs)
+    = (app, (val, cl)) : createBranchingList ys
   where
-    ys = dropWhile (\(v, _, _) -> v == val) zs
+    ys = dropWhile (\(_, (v, _)) -> v == val) zs
 
 
 generateDT' :: (Ord a, Ord b) => [Int] -> [Specimen a b] -> a -> Int -> DT a b
@@ -180,7 +161,7 @@ generateDT' unused sps' clMode' clModeCount'
     | otherwise
     =   Node ("Attribute " ++ show bestAttrId) (map newTree branchingList)
   where
-    newTree (val, app, cl) = (val, generateDT' newUnused (cleanSps val) cl app)
+    newTree (app, (val, cl)) = (val, generateDT' newUnused (cleanSps val) cl app)
     newUnused = filter (bestAttrId /=) unused
     cleanSps val = filter (spMatchesVal val) sps'
     spMatchesVal val (Specimen _ ys) = (ys !! bestAttrId) == val
