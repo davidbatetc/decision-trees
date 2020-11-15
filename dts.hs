@@ -19,9 +19,11 @@ data DT a b = Leaf a | Node String [(b, DT a b)]
 spaces :: Int -> String
 spaces n = replicate n ' '
 
+
 --Instantiation of Specimen as Show
 instance (Show a, Show b) => Show (Specimen a b) where
     show (Specimen x ys) = "\x1b[31;1mSpecimen\x1b[33;1m " ++ show x ++ " \x1b[0m" ++ show ys
+
 
 --Instantiation of DT as Show
 instance (Show a, Show b) => Show (DT a b) where
