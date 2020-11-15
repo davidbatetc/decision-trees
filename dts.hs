@@ -9,6 +9,12 @@ Node "cap-color" [("brown",Leaf "poisonous"),("yellow",Leaf "edible"),("white",N
 merge' (<) (==) (zip [1, 1, 1, 1, 2, 3, 4] [1, 1, 1, 1, 1, 1, 1]) (zip [1, 1, 1, 2, 2, 3] [1, 1, 1, 1, 1, 1])
 -}
 
+{-Benchmarking
+Version with naïve merge-group sort: 4.45s
+Version with optimized merge-group sort: 2.17s
+-}
+
+
 data Specimen a b = Specimen a [b]
 data DT a b = Leaf a | Node String [(b, DT a b)]
 
@@ -62,14 +68,6 @@ readSpecimenCc sep str = Specimen (unpack $ head splitStr) (map unpack $ tail sp
                     -- giving unexpected behavior in other parts of the program.
 
 
---Splits a list in two halves by alternating
-split :: [a] -> ([a], [a])
-split [] = ([], [])
-split [x] = ([x], [])
-split (x:y:zs) = (x : xs, y : ys)
-  where (xs, ys) = split zs
-
-
 merge :: (Ord a) => (a -> a -> Bool) -> [a] -> [a] -> [a]
 merge _ [] ms = ms
 merge _ ns [] = ns
@@ -78,46 +76,48 @@ merge comp (n:ns) (m:ms)
   | otherwise  = m : merge comp (n:ns) ms
 
 
-merge' :: (Ord a) => (a -> a -> Bool) -> (a -> a -> Bool)
-    -> [(Int, a)] -> [(Int, a)] -> [(Int, a)]
-merge' _ _ [] cxs = cxs
-merge' _ _ cys [] = cys
-merge' comp eq ((c1, x):cxs) ((c2, y):cys)
-    | eq x y      = (c1 + c2, x) : merge' comp eq cxs cys
-    | comp x y    = (c1, x) : merge' comp eq cxs ((c2, y):cys)
-    | otherwise   = (c2, y) : merge' comp eq ((c1, x):cxs) cys
-
-
 --Given a comparison function, runs merge sort on a given list
 msortBy :: (Ord a) => (a -> a -> Bool) -> [a] -> [a]
 msortBy _ [] = []
-msortBy _ [x] = [x]
-msortBy comp xs = merge comp (msortBy comp left) (msortBy comp right)
+msortBy comp ws = mergeAll (map (:[]) ws)
   where
-    (left, right) = split xs
+    mergeAll [xs] = xs
+    mergeAll xss  = mergeAll (mergePairs xss)
+    mergePairs (xs:ys:zss) = merge comp xs ys : mergePairs zss
+    mergePairs xs          = xs
 
 
-msortBy' :: (Ord a) => (a -> a -> Bool) -> (a -> a -> Bool)
+mergeGroup :: (Ord a) => (a -> a -> Bool) -> (a -> a -> Bool)
+    -> [(Int, a)] -> [(Int, a)] -> [(Int, a)]
+mergeGroup _ _ [] cxs = cxs
+mergeGroup _ _ cys [] = cys
+mergeGroup comp eq ((c1, x):cxs) ((c2, y):cys)
+    | eq x y      = (c1 + c2, x) : mergeGroup comp eq cxs cys
+    | comp x y    = (c1, x) : mergeGroup comp eq cxs ((c2, y):cys)
+    | otherwise   = (c2, y) : mergeGroup comp eq ((c1, x):cxs) cys
+
+
+mgsortBy :: (Ord a) => (a -> a -> Bool) -> (a -> a -> Bool)
     -> [a] -> [(Int, a)]
-msortBy' comp eq xs = msortBy'' $ zip (replicate (length xs) 1) xs
+mgsortBy _ _ []    = []
+mgsortBy comp eq xs = mergeAll (map (\x -> [(1, x)]) xs)
   where
-    msortBy'' [] = []
-    msortBy'' [cx] = [cx]
-    msortBy'' cxs = merge' comp eq (msortBy'' left) (msortBy'' right)
-      where
-        (left, right) = split cxs
+    mergeAll [cxs] = cxs
+    mergeAll cxss  = mergeAll (mergePairs cxss)
+    mergePairs (cxs:cys:czss) = mergeGroup comp eq cxs cys : mergePairs czss
+    mergePairs cxs            = cxs
 
 
 --Returns the number of appearances of the most commont class in
 -- a list of specimens, along with the class itself
 findNCountClassMode :: (Ord a) => [Specimen a b] -> (Int, a)
-findNCountClassMode = maximum . msortBy' (<) (==) . map getClass
+findNCountClassMode = maximum . mgsortBy (<) (==) . map getClass
   where getClass (Specimen x _) = x
 
 
 --Creates a list in which every element is a pair that contains one of the
--- attribute id's provided in 'unused', and a sublist made out of triplets
--- (value, appearances, class), where
+-- attribute id's provided in 'unused', and a sublist made out of
+-- (appearances, (value, class)), where
 -- 1. value: is one of the values of the attribute corresponding to the id.
 -- 2. class: is one of the possible classes.
 -- 3. appearances: is the number of appearances of the combination class-value
@@ -126,7 +126,7 @@ createAppsList :: (Ord a, Ord b) => [Int] -> [Specimen a b] -> [(Int, [(Int, (b,
 createAppsList unused sps = map gathered unused
   where
     gathered attrId = (attrId, msortBy customOrder $ groupedBag attrId)
-    groupedBag attrId = msortBy' (<) (==) $ map (classValPair attrId) sps
+    groupedBag attrId = mgsortBy (<) (==) $ map (classValPair attrId) sps
     classValPair attrId (Specimen x ys) = (ys !! attrId, x)
     customOrder (app1, (val1, _)) (app2, (val2, _))
         | val1 < val2                       = True
