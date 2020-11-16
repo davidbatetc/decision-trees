@@ -1,17 +1,3 @@
-{-Examples to run
-Node "cap-color" [("brown",Leaf "poisonous"),("yellow",Leaf "edible"),("white",Node "cap-shape" [("bell",Leaf "edible"),("convex",Leaf "poisonous")])]
-[Specimen "poisonous" ["convex", "brown", "black"], Specimen "edible" ["convex", "yellow", "black"], Specimen "edible" ["bell", "white", "brown"], Specimen "poisonous" ["convex", "white", "brown"], Specimen "edible" ["convex", "yellow", "brown"], Specimen "edible" ["bell", "white", "brown"], Specimen "poisonous" ["convex", "white", "pink"]]
-[Specimen "edible" ["bell", "brown"], Specimen "poisonous" ["convex", "brown"], Specimen "edible" ["bell", "brown"], Specimen "poisonous" ["convex", "pink"]]
-[Specimen "edible" ["pink", "convex"], Specimen "poisonous" ["pink", "convex"], Specimen "edible" ["blue", "convex"]]
--}
-
-{-Benchmarking
-Version with naïve merge-group sort: 4.45s
-Version with optimized merge-group sort: 2.17s
-Version with optimized access: 1.6s
--}
-
-
 data Specimen a b = Specimen a [b]
 data DT a b = Leaf a | Node String [(b, DT a b)]
 
