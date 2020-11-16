@@ -199,32 +199,44 @@ generateDT attrNames sps = generateDT' attrNames sps clMode clModeCount
   where (clModeCount, clMode) = findNCountClassMode sps
 
 
-classifySpecimen :: (Eq b, Show a, Read b) => DT a b -> IO String
-classifySpecimen (Leaf cl)    = return $ "\x1b[31;1mPrediction: \x1b[0m" ++ show cl
+classifySpecimen :: (Eq b, Show a, Read b) => DT a b -> IO (Either String String)
+classifySpecimen (Leaf cl)    = return $ Right ("\x1b[31;1mPrediction: \x1b[0m" ++ show cl)
 classifySpecimen (Node name list) = do
     putStrLn $ "\x1b[32;1mWhich " ++ name ++ "?\x1b[0m"
     val <- getLine
-    classifySpecimen $ (\(Just x) -> x) $ lookup (read val) list
+    case lookup (read val) list of
+        Nothing -> return $ Left ("\x1b[31;1mERROR. \x1b[0mValue "
+            ++ show val ++ " for attribute " ++ show name ++ " missing.")
+        Just dt -> classifySpecimen dt
 
 
-classifySpecimenCc :: DT Char Char -> IO String
-classifySpecimenCc (Leaf cl)    = return $ "\x1b[31;1mPrediction: \x1b[0m" ++ [cl]
+--Unfinished
+classifySpecimenCc :: DT Char Char -> IO (Either String String)
+classifySpecimenCc (Leaf cl) = return $ Right ("\x1b[31;1mPrediction: \x1b[0m" ++ [cl])
 classifySpecimenCc (Node name list) = do
     putStrLn $ "\x1b[32;1mWhich " ++ name ++ "?\x1b[0m"
     val <- getLine
-    classifySpecimenCc $ (\(Just x) -> x) $ lookup ((\[x] -> x) val) list
+    case lookup (unpack val) list of
+        Nothing -> return $ Left ("\x1b[31;1mERROR. \x1b[0mValue "
+            ++ show val ++ " for attribute " ++ show name ++ " missing.")
+        Just dt -> classifySpecimenCc dt
+  where
+    unpack [x] = x
+    unpack _   = ' '
 
 
 --Provided as an example, not used
 generalizedMain :: String -> IO ()
 generalizedMain fileName = do
     content <- readFile fileName
-    interaction <- classifySpecimen (readSpecimenList content :: DT String (Int, String))
-    putStrLn interaction
+    interaction <- classifySpecimen (readSpecimenList content)
+    case interaction of
+        Left errorMessage -> putStrLn errorMessage
+        Right prediction  -> putStrLn prediction
   where
     readSpecimenList content' = generateDT attrNames sps
       where
-        sps = map (readSpecimen ';') $ lines content'
+        sps = map (readSpecimen ';') $ lines content' :: [Specimen Int (Int, String)]
         attrNames = ["Attribute " ++ show i | i <- [1..length sps]]
 
 
@@ -243,7 +255,9 @@ main :: IO ()
 main = do
     content <- readFile "agaricus-lepiota.data"
     interaction <- classifySpecimenCc (readSpecimenCcList content)
-    putStrLn interaction
+    case interaction of
+        Left errorMessage -> putStrLn errorMessage
+        Right prediction  -> putStrLn prediction
   where
     readSpecimenCcList content' = generateDT attrNames sps
       where
