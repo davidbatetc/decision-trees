@@ -7,7 +7,7 @@ We are tasked with creating a Haskell program that allows us to build a **decisi
 
 
 ## Usage
-There are mainly two ways to run this program. The first option is to **compile the program** and then run the compiled file. The second option is to run the program using an **interactive environment**. The [*Glasgow Haskell Compiler (GHC)*](https://www.haskell.org/ghc/) is recommended for both options. The following instructions have been tested in a Linux environment, and they might slightly differ in other operating systems.
+There are mainly two ways to run this program. The first option is to **compile the program** and then run the compiled file. The second option is to run the program using an **interactive environment**. The [*Glasgow Haskell Compiler (GHC)*](https://www.haskell.org/ghc/) is recommended for both options. The following instructions have been tested in a Linux environment, and they might differ slightly in other operating systems.
 
 ### Compiled version
 In order to run the program we first have to compile it. This can be achieved by running the following command in a terminal once *ghc* has been installed.
