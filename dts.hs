@@ -143,7 +143,7 @@ createAppsList sps = createAppsList' attrsMat
 chooseBestAttrId :: (Ord a, Ord b) => [[(Int, (b, a))]] -> Int
 chooseBestAttrId ws = snd $ maximum $ zip (map countFirstApp ws) [0..length ws - 1]
   where
-    countFirstApp [] = (0, 0, 0)
+    countFirstApp [] = (0, 0, 0) :: (Int, Int, Int)
     countFirstApp ((app, (val, _)):zs)
         | null zs'    = (app' + app, superAcc' + app, diffVals + 1)
         | otherwise   = (app' + app, superAcc', diffVals + 1)
