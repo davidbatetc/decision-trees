@@ -143,13 +143,13 @@ createAppsList sps = createAppsList' attrsMat
 chooseBestAttrId :: (Ord a, Ord b) => [[(Int, (b, a))]] -> Int
 chooseBestAttrId ws = snd $ maximum $ zip (map countFirstApp ws) [0..length ws - 1]
   where
-    countFirstApp [] = (0, 0)
+    countFirstApp [] = (0, 0, 0)
     countFirstApp ((app, (val, _)):zs)
-        | null zs'    = (app' + app, superAcc' + app)
-        | otherwise   = (app' + app, superAcc')
+        | null zs'    = (app' + app, superAcc' + app, diffVals + 1)
+        | otherwise   = (app' + app, superAcc', diffVals + 1)
       where
         (zs', zs'') = span (\(_, (v, _)) -> v == val) zs
-        (app', superAcc') = countFirstApp zs''
+        (app', superAcc', diffVals) = countFirstApp zs''
 
 
 --Creates a list choosing only the information of the most common class
@@ -158,8 +158,7 @@ createBranchingList :: (Ord a, Ord b) => [(Int, (b, a))] -> [(Int, (b, a))]
 createBranchingList [] = []
 createBranchingList ((app, (val, cl)):zs)
     = (app, (val, cl)) : createBranchingList ys
-  where
-    ys = dropWhile (\(_, (v, _)) -> v == val) zs
+  where ys = dropWhile (\(_, (v, _)) -> v == val) zs
 
 
 --Returns the number of appearances of the most commont class in
