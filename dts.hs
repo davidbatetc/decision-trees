@@ -24,11 +24,11 @@ instance (Show a, Show b) => Show (DT a b) where
 --The words function generalized so that it takes the character separing each
 -- of the words as an argument
 wordsCustom :: Char -> String -> [String]
-wordsCustom sep = words . map replace
-  where
-    replace char
-        | char == sep   = ' '
-        | otherwise     = char
+wordsCustom _ "" = []
+wordsCustom sep (w:ws)
+    | w == sep    = wordsCustom sep ws
+    | otherwise   = (w:ws') : wordsCustom sep ws''
+  where (ws', ws'') = span (/= sep) ws
 
 
 --Reads a Specimen from a String, whose elements are separed by the character sep
