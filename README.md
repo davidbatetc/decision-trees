@@ -22,6 +22,9 @@ As a consequence, both the classes and the values can be of any given type. Note
 dt = Node "Attribute 1" [(100, Node "Attribute 2" [(55, Leaf 67.54)])]
 ```
 
+An interesting observation to make is the fact that the base case of the decision tree is not an empty tree, but a tree which only consists of a leaf.
+
+
 ### Feeding data to the decision tree generator
 In order to build a decision tree, we need to know which **attributes** we will consider, as well as the **values** of these attributes for different examples. Using the mushrooms as an analogy, the following data type is defined.
 
@@ -50,8 +53,24 @@ One of the most critical parts of building the decision tree in terms of efficie
 [(2,"yellow"),(1,"pink"),(3,"brown")]
 ```
 
-
 ### Heuristics
+During the construction of the decision tree as described in [[1]](https://gebakx.github.io/ml/#35), we might encounter situations in which we cannot immediately decide **which is the best attribute**. What we can do when this happens is use heuristics to choose the attribute which we think will be more convenient.
+
+This program includes **two heuristics** that choose the attribute considered to be the best when the decision procedure described in [[1]](https://gebakx.github.io/ml/#35) results in a draw. If the best attribute cannot be decided, the first heuristic is used. If this is still not enough to decide, then the second heuristic is used. In the case that even the second heuristic fails to decide, the attribute that comes the last in lexicographical order is chosen among those that are tied. <!-- I am not sure that this last sentence is true. I have to check the code and make sure about it!!! -->
+
+A tie can also happen when finding **which is the most common class** among the specimens that have the same value in a given attribute. For this case, the program does not include an heuristic. Instead, it chooses the greater class among those that are tied, according to the order associated to the type of the classes. <!-- Once again, I am not at all sure that this is true. I should really really check this out!!! --> 
+
+
+#### Maximizing perfect accuracy
+
+#### Maximizing the number of values
+
+<!--Fix the third method of decision in dts.hs for when a draw happens.
+    generateDT [] [Specimen 1 [], Specimen 2 []]
+and
+    generateDT ["attr"] [Specimen 1 ["A"], Specimen 2 ["A"]]
+should produce analogous results.
+-->
 
 
 ## Classification
