@@ -44,8 +44,8 @@ Note that the types of the classes and the values of the attributes of the speci
 One of the most critical parts of building the decision tree in terms of efficiency is **measuring the accuracy** of each of the attributes in order to decide which is the best one at a given point. In this implementation, this is by done using an algorithm the relies heavily on sorting and grouping repetitions. Since this is the part of the algorithm that has the highest time complexity, it is important to optimize it as much as possible. For this reason, this program includes a **modified merge sort** that sorts a list of elements while counting repetitions. Let us provide a couple of examples:
 
 ```haskell
->>>> mgsortBy compare [1, -1, 2, 1, 4, 5, -1, 5, 4, 2, 3]
-[(2,-1),(2,1),(2,2),(1,3),(2,4),(2,5)]
+>>>> mgsortBy compare [-1, -1, 2, -1, 4, 5, -1, 5, 4, 2, 5]
+[(4,-1),(2,2),(2,4),(3,5)]
 >>>> mgsortBy (flip compare) ["brown", "yellow", "brown", "brown", "yellow", "pink"]
 [(2,"yellow"),(1,"pink"),(3,"brown")]
 ```
