@@ -10,7 +10,7 @@ We are tasked with creating a Haskell program that allows us to build a **decisi
 The decision tree in this program is implemented using as a guideline the description in [[1] Gerard Escudero, 2020, *Machine Learning* (pages 35 to 40)](https://gebakx.github.io/ml/#35).
 
 ### Definition of the decision tree
-Following the philosophy of Haskell, the decision tree is defined *in a generalized way*, as follows.
+Following Haskell's philosophy, the decision tree is defined *in a generalized way*, as follows.
 
 ```haskell
 data DT a b = Leaf a | Node String [(b, DT a b)]
@@ -29,7 +29,7 @@ In order to build a decision tree, we need to know which **attributes** we will 
 data Specimen a b = Specimen a [b]
 ```
 
-The purpose of this definition is to encapsulate the concept of *example to be feeded to the decision tree*, in an attempt to make the code easier to read. Once again, this definition is given in a generalized way. We can generate a decision tree in the following way.
+The purpose of this definition is to encapsulate the concept of *example to be feeded to the decision tree*, in an attempt to make the code easier to read. Once again, this definition is given in a generalized way. We can then generate a decision tree in the following way.
 
 ```haskell
 sps = [Specimen "edible" ["convex", "brown"], Specimen "poisonous" ["bell", "brown"]]
@@ -37,11 +37,24 @@ attrs = ["cap-shape", "cap-color"]
 dt = generateDT attrs sps
 ```
 
-### Details about the algorithm
+Note that the types of the classes and the values of the attributes of the specimens need to be instances of the `Ord` class for this implementation of the construction of the decision tree. It would be possible, however, to implement it so that they only need to be instances of the `Eq` class.  
+
+
+### Short note on efficiency
+One of the most critical parts of building the decision tree in terms of efficiency is **measuring the accuracy** of each of the attributes in order to decide which is the best one at a given point. In this implementation, this is by done using an algorithm the relies heavily on sorting and grouping repetitions. Since this is the part of the algorithm that has the highest time complexity, it is important to optimize it as much as possible. For this reason, this program includes a **modified merge sort** that sorts a list of elements while counting repetitions. Let us provide a couple of examples:
+
+```haskell
+>>>> mgsortBy compare [1, -1, 2, 1, 4, 5, -1, 5, 4, 2, 3]
+[(2,-1),(2,1),(2,2),(1,3),(2,4),(2,5)]
+>>>> mgsortBy (flip compare) ["brown", "yellow", "brown", "brown", "yellow", "pink"]
+[(2,"yellow"),(1,"pink"),(3,"brown")]
+```
 
 
 ### Heuristics
 
+
+## Classification
 
 
 ## Usage
