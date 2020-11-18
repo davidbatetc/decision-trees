@@ -7,20 +7,41 @@ We are tasked with creating a Haskell program that allows us to build a **decisi
 
 
 ## Construction of the decision tree
-The decision tree in this program is implemented using as a guideline the description in [Gerard Escudero, 2020, *Machine Learning* (pages 35 to 40)](https://gebakx.github.io/ml/#35).
+The decision tree in this program is implemented using as a guideline the description in [[1] Gerard Escudero, 2020, *Machine Learning* (pages 35 to 40)](https://gebakx.github.io/ml/#35).
 
 ### Definition of the decision tree
 Following the philosophy of Haskell, the decision tree is defined *in a generalized way*, as follows.
 
-```Haskell
+```haskell
 data DT a b = Leaf a | Node String [(b, DT a b)]
 ```
 
 As a consequence, both the classes and the values can be of any given type. Note that this is a recursive definition. A decision tree can either be a **leaf**, or a **node** whose children are decision trees which are accessed via values of an attribute. Hence, it is possible to define, for example,
 
-```Haskell
-t = Node "attribute 1" [(100, Leaf 67.54)]
+```haskell
+dt = Node "Attribute 1" [(100, Node "Attribute 2" [(55, Leaf 67.54)])]
 ```
+
+### Feeding data to the decision tree generator
+In order to build a decision tree, we need to know which **attributes** we will consider, as well as the **values** of these attributes for different examples. Using the mushrooms as an analogy, the following data type is defined.
+
+```haskell
+data Specimen a b = Specimen a [b]
+```
+
+The purpose of this definition is to encapsulate the concept of *example to be feeded to the decision tree*, in an attempt to make the code easier to read. Once again, this definition is given in a generalized way. We can generate a decision tree in the following way.
+
+```haskell
+sps = [Specimen "edible" ["convex", "brown"], Specimen "poisonous" ["bell", "brown"]]
+attrs = ["cap-shape", "cap-color"]
+dt = generateDT attrs sps
+```
+
+### Details about the algorithm
+
+
+### Heuristics
+
 
 
 ## Usage
