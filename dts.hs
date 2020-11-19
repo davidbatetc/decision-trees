@@ -1,11 +1,24 @@
--- Specimen and DT
-data Specimen a b = Specimen a [b]
-data DT a b = Leaf a | Node String [(b, DT a b)]
+--------------------------------------------------------------------------------
+-- | UTILITIES: Functions that are not directly related to this project.
+--------------------------------------------------------------------------------
 
-
--- Creates a String only containing the given number of spaces
+-- | Creates a String which only contains the given number of spaces
 spaces :: Int -> String
 spaces n = replicate n ' '
+
+-- | The words function generalized so that it takes the character separing
+-- each of the words as an argument. Adapted from the official implementation
+-- of words.
+wordsCustom :: Char -> String -> [String]
+wordsCustom sep s = case dropWhile (== sep) s of
+    "" -> []
+    s' -> w : wordsCustom sep s'' where (w, s'') = break (== sep) s'
+
+-- | Specimen encapsulates the concept of example to be fed into the decision
+-- tree, while DT is the decision tree itself. Note that the class and the
+-- values can be of any type.
+data Specimen a b = Specimen a [b]
+data DT a b = Leaf a | Node String [(b, DT a b)]
 
 
 -- Instantiation of Specimen as Show
@@ -21,15 +34,6 @@ instance (Show a, Show b) => Show (DT a b) where
             spaces n ++ "\x1b[32;1m" ++ show node ++ "\x1b[0m\n" ++ concatMap (show'' (n + 2)) list where
                 show'' m (branch, dt') = spaces m ++ "\x1b[33;1m" ++ show branch ++ "\x1b[0m\n" ++ show' (m + 2) dt'
 
-
--- The words function generalized so that it takes the character separing each
---  of the words as an argument
-wordsCustom :: Char -> String -> [String]
-wordsCustom _ "" = []
-wordsCustom sep (w:ws)
-    | w == sep    = wordsCustom sep ws
-    | otherwise   = (w:ws') : wordsCustom sep ws''
-  where (ws', ws'') = span (/= sep) ws
 
 
 -- Reads a Specimen from a String, whose elements are separed by the character sep
