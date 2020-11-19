@@ -133,6 +133,14 @@ $ ./dts
 <system> ERROR. Value "x" for attribute "spore-print-color" missing.
 ```
 
+## Further comments
+### Output coloring
+In order to make the program more user-friendly, **ANSI color escape sequences** are used when displaying the content. While this is a nice feature for those running the program in an environment that supports these escape sequences, it might not look so good if that is not the case. Thus, it is recommended to run the program in an environment that offers support for these.
+
+
+### Generality of the program
+
+
 
 ## Usage
 There are mainly two ways to run this program. The first option is to **compile the program** and then run the compiled file. The second option is to run the program using an **interactive environment**. The [*Glasgow Haskell Compiler (GHC)*](https://www.haskell.org/ghc/) is recommended for both options. The following instructions have been tested in a Linux environment, and they might differ slightly in other operating systems.
@@ -152,7 +160,7 @@ $ ./dts
 ```
 
 ### Interactive environment
-In order to run the program in the interactive environment of *ghc* we can use the command.
+In order to run the program in the interactive environment of *ghc* we can use the command
 ```bash
 $ ghci dts.hs
 ```
