@@ -298,7 +298,7 @@ classifySpecimenCc (Node name list) = do
     unpack [x] = x
     unpack _   = ' '
 
--- | Given the name of a file containing the data set of Specimens, returns the
+-- | Given the name of a file containing a data set of Specimens, returns the
 -- decision tree corresponding to this data set wrapped in the IO monad.
 --
 -- Note: function not used in the main program but left for convenience. A
