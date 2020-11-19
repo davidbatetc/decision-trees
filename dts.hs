@@ -264,7 +264,7 @@ generateDT attrNames sps = generateDT' attrNames sps clMode clModeCount
 -- Note: function not used in the main part of the program, but provided for the
 -- sake of generality.
 classifySpecimen :: (Eq b, Show a, Read b) => DT a b -> IO (Either String String)
-classifySpecimen (Leaf cl)    = return $ Right ("\x1b[31;1mPrediction: \x1b[0m" ++ show cl)
+classifySpecimen (Leaf cl) = return $ Right ("\x1b[31;1mPrediction: \x1b[0m" ++ show cl)
 classifySpecimen (Node name list) = do
     putStrLn $ "\x1b[32;1mWhich " ++ name ++ "?\x1b[0m"
     val <- getLine
@@ -297,21 +297,6 @@ classifySpecimenCc (Node name list) = do
   where
     unpack [x] = x
     unpack _   = ' '
-
-
--- Provided as an example, not used
-generalizedMain :: String -> IO ()
-generalizedMain fileName = do
-    content <- readFile fileName
-    interaction <- classifySpecimen (readSpecimenList content)
-    case interaction of
-        Left errorMessage -> putStrLn errorMessage
-        Right prediction  -> putStrLn prediction
-  where
-    readSpecimenList content' = generateDT attrNames sps
-      where
-        sps = map (readSpecimen ';') $ lines content' :: [Specimen Int (Int, String)]
-        attrNames = ["Attribute " ++ show i | i <- [1..length sps]]
 
 
 showTree :: String -> IO (DT Char Char)
