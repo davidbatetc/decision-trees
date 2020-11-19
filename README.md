@@ -62,7 +62,7 @@ A tie can also happen when finding **which is the most common class** among the 
 
 
 #### Maximizing perfect accuracy
-The main objective of the first heuristic is to maximize the number of  specimens for which a prediction of the class can be made already at that point. In this way, it is hoped that the user will need to use less attributes in order to obtain their prediction. This is done by choosing **the attribute which has more specimens for which the specimens with the same value of the attribute are all members of the same class**. In this case, the prediction of the class in this point is perfectly accurate (according to the data set). An example is provided below.
+The main objective of the first heuristic is to maximize the number of  specimens for which a prediction of the class can be made already at that point. In this way, it is hoped that the user will need to use less attributes in order to obtain their prediction. This is done by choosing **the attribute which has more specimens for which the specimens with the same value of the attribute are all members of the same class**. In this case, the prediction of the class *in this point* is perfectly accurate (according to the data set). An example is provided below.
 
 ```haskell
 >>>> attrNames = ["cap-shape", "cap-color"]
@@ -104,13 +104,41 @@ should produce analogous results.
 
 
 ## Classification
+Once compiled, what the program does is classify any mushroom based on the decision tree that has been previously built using the file `agaricus-lepiota.data`, extracted from the data set [*Mushroom*](https://archive.ics.uci.edu/ml/datasets/Mushroom). The user is asked to provide the values of different attributes in order to classify the specimen, whose set of values might not match any of the specimens in the data set. The following is an example of execution of the program.
+
+```bash
+$ ./dts
+```
+```
+<system> Which odor?
+<user> n
+<system> Which spore-print-color?
+<user> w
+<system> Which habitat?
+<user> p
+<system> Prediction: e
+```
+
+A possibility that can happen is that the specimen of the user has a value for a given attribute that does not match any of the decision tree *at that point*. When this happens, an error message is displayed and the program finishes. Internally, this is handled using the `Maybe` and the `Either` types. An example of this is shown below.
+
+```bash
+$ ./dts
+```
+
+```
+<system> Which odor?
+<user> n
+<system> Which spore-print-color?
+<user> x
+<system> ERROR. Value "x" for attribute "spore-print-color" missing.
+```
 
 
 ## Usage
 There are mainly two ways to run this program. The first option is to **compile the program** and then run the compiled file. The second option is to run the program using an **interactive environment**. The [*Glasgow Haskell Compiler (GHC)*](https://www.haskell.org/ghc/) is recommended for both options. The following instructions have been tested in a Linux environment, and they might differ slightly in other operating systems.
 
 ### Compiled version
-In order to run the program we first have to compile it. This can be achieved by running the following command in a terminal once *ghc* has been installed.
+In order to run the compiled program we first have to compile it. This can be achieved by running the following command in a terminal once *ghc* has been installed.
 ```bash
 $ ghc dts.hs
 ```
