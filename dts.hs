@@ -103,7 +103,7 @@ instance (Show a, Show b) => Show (Specimen a b) where
         = "\x1b[31;1mSpecimen\x1b[33;1m " ++ show x ++ " \x1b[0m" ++ show ys
 
 -- | DT is instantiated as Show and is displayed as a list with colors in which,
--- using spaces, the children are shown more to the right than their parents .
+-- using spaces, the children are shown more to the right than their parents.
 --
 -- >>> Node "a" [(1, Leaf 'A'), (2, Node "b" [(3, Leaf 'B')])]
 -- "a"
