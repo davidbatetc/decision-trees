@@ -1,18 +1,19 @@
+-- Specimen and DT
 data Specimen a b = Specimen a [b]
 data DT a b = Leaf a | Node String [(b, DT a b)]
 
 
---Creates a String only containing the given number of spaces
+-- Creates a String only containing the given number of spaces
 spaces :: Int -> String
 spaces n = replicate n ' '
 
 
---Instantiation of Specimen as Show
+-- Instantiation of Specimen as Show
 instance (Show a, Show b) => Show (Specimen a b) where
     show (Specimen x ys) = "\x1b[31;1mSpecimen\x1b[33;1m " ++ show x ++ " \x1b[0m" ++ show ys
 
 
---Instantiation of DT as Show
+-- Instantiation of DT as Show
 instance (Show a, Show b) => Show (DT a b) where
     show = show' 0 where
         show' n (Leaf leaf) = spaces n ++ show leaf ++ "\n"
@@ -21,8 +22,8 @@ instance (Show a, Show b) => Show (DT a b) where
                 show'' m (branch, dt') = spaces m ++ "\x1b[33;1m" ++ show branch ++ "\x1b[0m\n" ++ show' (m + 2) dt'
 
 
---The words function generalized so that it takes the character separing each
--- of the words as an argument
+-- The words function generalized so that it takes the character separing each
+--  of the words as an argument
 wordsCustom :: Char -> String -> [String]
 wordsCustom _ "" = []
 wordsCustom sep (w:ws)
@@ -31,26 +32,26 @@ wordsCustom sep (w:ws)
   where (ws', ws'') = span (/= sep) ws
 
 
---Reads a Specimen from a String, whose elements are separed by the character sep
--- using the built-in read function. This means that Strings have to be given
--- with \"\" and Chars with \'\'. This function is not used in the program, but
--- it is provided so as to show how a generalized Specimen would be read.
+-- Reads a Specimen from a String, whose elements are separed by the character sep
+--  using the built-in read function. This means that Strings have to be given
+--  with \"\" and Chars with \'\'. This function is not used in the program, but
+--  it is provided so as to show how a generalized Specimen would be read.
 readSpecimen :: (Read a, Read b) => Char -> String -> Specimen a b
 readSpecimen sep str = Specimen (read $ head splitStr) (map read (tail splitStr))
   where splitStr = wordsCustom sep str
 
 
---Reads a Specimen Char Char from a String, whose elements are separed by the
--- character sep. Note that in this case "x,y,z" will give (Specimen x [y,z]),
--- whereas with readSpecimen, in order to obtain the same result, we would have
--- to write readSpecimen "\'x\',\'y\',\'z\'" :: Specimen Char Char.
+-- Reads a Specimen Char Char from a String, whose elements are separed by the
+--  character sep. Note that in this case "x,y,z" will give (Specimen x [y,z]),
+--  whereas with readSpecimen, in order to obtain the same result, we would have
+--  to write readSpecimen "\'x\',\'y\',\'z\'" :: Specimen Char Char.
 readSpecimenCc :: Char -> String -> Specimen Char Char
 readSpecimenCc sep str = Specimen (unpack $ head splitStr) (map unpack $ tail splitStr)
   where
     splitStr = wordsCustom sep str
-    unpack [x] = x  --We could have used head instead, but it would have matched
-                    -- Strings that don't have only one character, potentially
-                    -- giving unexpected behavior in other parts of the program.
+    unpack [x] = x  -- We could have used head instead, but it would have matched
+                    --  Strings that don't have only one character, potentially
+                    --  giving unexpected behavior in other parts of the program.
 
 
 merge :: (Ord a) => (a -> a -> Ordering) -> [a] -> [a] -> [a]
@@ -61,7 +62,7 @@ merge comp (n:ns) (m:ms)
   | otherwise       = m : merge comp (n:ns) ms
 
 
---Given a comparison function, runs merge sort on a given list
+-- Given a comparison function, runs merge sort on a given list
 msortBy :: (Ord a) => (a -> a -> Ordering) -> [a] -> [a]
 msortBy _ [] = []
 msortBy comp ws = mergeAll (map (:[]) ws)
@@ -99,13 +100,13 @@ mgsortBy comp (w:ws) = mergeAll $ map (:[]) (spanCount ws w 1)
     mergePairs cxs            = cxs
 
 
---Creates a list in which every element is a pair that contains one of the
--- attribute id's provided in 'unused', and a sublist made out of
--- (appearances, (value, class)), where
--- 1. value: is one of the values of the attribute corresponding to the id.
--- 2. class: is one of the possible classes.
--- 3. appearances: is the number of appearances of the combination class-value
---   in the list of Specimens provided.
+-- Creates a list in which every element is a pair that contains one of the
+--  attribute id's provided in 'unused', and a sublist made out of
+--  (appearances, (value, class)), where
+--  1. value: is one of the values of the attribute corresponding to the id.
+--  2. class: is one of the possible classes.
+--  3. appearances: is the number of appearances of the combination class-value
+--    in the list of Specimens provided.
 createAppsList :: (Ord a, Ord b) => [Specimen a b] -> [[(Int, (b, a))]]
 createAppsList sps = createAppsList' attrsMat
   where
@@ -121,11 +122,11 @@ createAppsList sps = createAppsList' attrsMat
     singleList = msortBy customOrder . mgsortBy compare . flip zip cls
     customOrder (app1, (val1, cl1)) (app2, (val2, cl2))
         | val1 /= val2   = compare val1 val2
-        | app1 /= app2   = compare app2 app1  --Note the inversion
-        | otherwise      = compare cl2 cl1    --Note the inversion
+        | app1 /= app2   = compare app2 app1  -- Note the inversion
+        | otherwise      = compare cl2 cl1    -- Note the inversion
 
 
---Chooses the best attribute
+-- Chooses the best attribute
 chooseBestAttrId :: (Ord a, Ord b) => [[(Int, (b, a))]] -> Int
 chooseBestAttrId ws = snd $ maximum $ zip (map countFirstApp ws) [0..length ws - 1]
   where
@@ -138,8 +139,8 @@ chooseBestAttrId ws = snd $ maximum $ zip (map countFirstApp ws) [0..length ws -
         (app', superAcc', diffVals) = countFirstApp zs''
 
 
---Creates a list choosing only the information of the most common class
--- for each of the values
+-- Creates a list choosing only the information of the most common class
+--  for each of the values
 createBranchingList :: (Ord a, Ord b) => [(Int, (b, a))] -> [(Int, (b, a))]
 createBranchingList [] = []
 createBranchingList ((app, (val, cl)):zs)
@@ -147,8 +148,8 @@ createBranchingList ((app, (val, cl)):zs)
   where ys = dropWhile (\(_, (v, _)) -> v == val) zs
 
 
---Returns the number of appearances of the most commont class in
--- a list of specimens, along with the class itself
+-- Returns the number of appearances of the most commont class in
+--  a list of specimens, along with the class itself
 findNCountClassMode :: (Ord a) => [Specimen a b] -> (Int, a)
 findNCountClassMode = maximum . mgsortBy compare . map (\(Specimen x _) -> x)
 
@@ -196,7 +197,7 @@ classifySpecimen (Node name list) = do
         Just dt -> classifySpecimen dt
 
 
---Unfinished
+-- Unfinished
 classifySpecimenCc :: DT Char Char -> IO (Either String String)
 classifySpecimenCc (Leaf cl) = return $ Right ("\x1b[31;1mPrediction: \x1b[0m" ++ [cl])
 classifySpecimenCc (Node name list) = do
@@ -211,7 +212,7 @@ classifySpecimenCc (Node name list) = do
     unpack _   = ' '
 
 
---Provided as an example, not used
+-- Provided as an example, not used
 generalizedMain :: String -> IO ()
 generalizedMain fileName = do
     content <- readFile fileName
