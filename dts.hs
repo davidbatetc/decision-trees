@@ -315,7 +315,7 @@ showTree fileName = do
         attrNames = ["Attribute " ++ show i | i <- [1..length sps]]
 
 -- | Generates a decision tree from the data set in "agaricus-lepiota.data" and
--- then classifies a specimen using user interaction.
+-- then classifies a Specimen using user interaction.
 main :: IO ()
 main = do
     content <- readFile "agaricus-lepiota.data"
