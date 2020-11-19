@@ -2,7 +2,7 @@
 -- | UTILITIES: Functions that are not directly related to this project.
 --------------------------------------------------------------------------------
 
--- | Creates a String which only contains the given number of spaces
+-- | Creates a String which only contains the given number of spaces.
 spaces :: Int -> String
 spaces n = replicate n ' '
 
@@ -92,11 +92,25 @@ removeNth xs n = removeNth' xs n 0
 data Specimen a b = Specimen a [b]
 data DT a b = Leaf a | Node String [(b, DT a b)]
 
--- Instantiation of Specimen as Show
+-- | Specimen is instantiated as Show adding colors to the default instantiation
+-- that would arise from using "deriving Show" in the definition of Specimen.
+--
+-- >>> Specimen "a" [1, 2, 3]
+-- Specimen "a" [1,2,3]
 instance (Show a, Show b) => Show (Specimen a b) where
     show (Specimen x ys) = "\x1b[31;1mSpecimen\x1b[33;1m " ++ show x ++ " \x1b[0m" ++ show ys
 
--- Instantiation of DT as Show
+-- | DT is instantiated as Show and is displayed as a list with colors in which,
+-- using spaces, the children are shown more to the right than their parents .
+--
+-- >>> Node "a" [(1, Leaf 'A'), (2, Node "b" [(3, Leaf 'B')])]
+-- "a"
+--   1
+--     'A'
+--   2
+--     "b"
+--       3
+--         'B'
 instance (Show a, Show b) => Show (DT a b) where
     show = show' 0 where
         show' n (Leaf leaf) = spaces n ++ show leaf ++ "\n"
@@ -129,13 +143,13 @@ readSpecimenCc sep str = Specimen (unpack $ head splitStr) (map unpack $ tail sp
 -- | CONSTRUCTION OF THE DECISION TREE
 --------------------------------------------------------------------------------
 
--- Creates a list in which every element is a pair that contains one of the
---  attribute id's provided in 'unused', and a sublist made out of
---  (appearances, (value, class)), where
---  1. value: is one of the values of the attribute corresponding to the id.
---  2. class: is one of the possible classes.
---  3. appearances: is the number of appearances of the combination class-value
---    in the list of Specimens provided.
+-- | Creates a list in which every element is a pair that contains one of the
+-- attribute id's provided in 'unused', and a sublist made out of
+-- (appearances, (value, class)), where
+-- 1. value: is one of the values of the attribute corresponding to the id.
+-- 2. class: is one of the possible classes.
+-- 3. appearances: is the number of appearances of the combination class-value
+--   in the list of Specimens provided.
 createAppsList :: (Ord a, Ord b) => [Specimen a b] -> [[(Int, (b, a))]]
 createAppsList sps = createAppsList' attrsMat
   where
