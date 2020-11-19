@@ -79,6 +79,21 @@ The main objective of the first heuristic is to maximize the number of  specimen
 
 
 #### Maximizing the number of values
+This heuristic consists on choosing **the attribute which has more different values** at that point. The aim of this heuristic is once again to reduce the number of attributes that the user will need to use in order to obtain their prediction. Note that under the assumption that for each attribute, each value has approximately the same amount of specimens, the number of specimens in each of the subtrees arising from the choice of attribute will be less if the chosen attribute has more different values. The hope is that this results in trees which have a lower height. An example in which this heuristic is used is the following.
+
+```haskell
+>>>> attrNames = ["cap-shape", "cap-color"]
+>>>> sps = [Specimen "edible" ["convex", "brown"], Specimen "edible" ["convex", "white"], Specimen "poisonous" ["bell", "pink"]]
+>>>> generateDT attrNames sps
+"cap-color"
+  "brown"
+    "edible"
+  "pink"
+    "poisonous"
+  "white"
+    "edible"
+```
+
 
 <!--Fix the third method of decision in dts.hs for when a draw happens.
     generateDT [] [Specimen 1 [], Specimen 2 []]
