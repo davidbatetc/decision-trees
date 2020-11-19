@@ -298,7 +298,12 @@ classifySpecimenCc (Node name list) = do
     unpack [x] = x
     unpack _   = ' '
 
-
+-- | Given the name of a file containing the data set of Specimens, returns the
+-- decision tree corresponding to this data set wrapped in the IO monad.
+--
+-- Note: function not used in the main program but left for convenience. A
+-- function that shows the decision tree corresponding to data sets with
+-- different types for the classes and the values can be created analogously.
 showTree :: String -> IO (DT Char Char)
 showTree fileName = do
     content <- readFile fileName
@@ -309,7 +314,8 @@ showTree fileName = do
         sps = map (readSpecimenCc ',') $ lines content'
         attrNames = ["Attribute " ++ show i | i <- [1..length sps]]
 
-
+-- | Generates a decision tree from the data set in "agaricus-lepiota.data" and
+-- then classifies a specimen using user interaction.
 main :: IO ()
 main = do
     content <- readFile "agaricus-lepiota.data"
