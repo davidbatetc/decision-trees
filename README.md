@@ -33,7 +33,7 @@ $ ghci dts.hs
 
 
 ## Construction of the decision tree
-The decision tree in this program is implemented using as a guideline the description in [[1] Gerard Escudero, 2020, *Machine Learning* (pages 35 to 40)](https://gebakx.github.io/ml/#35).
+The decision tree in this program is implemented using as a guideline the description in [*Machine Learning*](https://gebakx.github.io/ml/#35) (pages 35 to 40).
 
 ### Definition of the decision tree
 Following Haskell's philosophy, the decision tree is defined *in a generalized way*, as follows.
@@ -80,9 +80,9 @@ One of the most critical parts of building the decision tree in terms of efficie
 ```
 
 ### Heuristics
-During the construction of the decision tree as described in [[1]](https://gebakx.github.io/ml/#35), we might encounter situations in which we cannot immediately decide **which is the best attribute**. What we can do when this happens is use heuristics to choose the attribute which we think will be more convenient.
+During the construction of the decision tree as described in [[4]](https://gebakx.github.io/ml/#35), we might encounter situations in which we cannot immediately decide **which is the best attribute**. What we can do when this happens is use heuristics to choose the attribute which we think will be more convenient.
 
-This program includes **two heuristics** that choose the attribute considered to be the best when the decision procedure described in [[1]](https://gebakx.github.io/ml/#35) results in a draw. If the best attribute cannot be decided, the first heuristic is used. If this is still not enough to decide, then the second heuristic is used. In the case that even the second heuristic fails to decide, the attribute that comes the last in lexicographical order is chosen among those that are tied. <!-- I am not sure that this last sentence is true. I have to check the code and make sure about it!!! -->
+This program includes **two heuristics** that choose the attribute considered to be the best when the decision procedure described in [[4]](https://gebakx.github.io/ml/#35) results in a draw. If the best attribute cannot be decided, the first heuristic is used. If this is still not enough to decide, then the second heuristic is used. In the case that even the second heuristic fails to decide, the attribute that comes the last in lexicographical order is chosen among those that are tied. <!-- I am not sure that this last sentence is true. I have to check the code and make sure about it!!! -->
 
 A tie can also happen when finding **which is the most common class** among the specimens that have the same value in a given attribute. For this case, the program does not include an heuristic. Instead, it chooses the greater class among those that are tied, according to the order associated to the type of the classes. <!-- Once again, I am not at all sure that this is true. I should really really check this out!!! -->
 
@@ -194,6 +194,10 @@ Since this is not how the file that contains the data set is formatted (`agaricu
 
 
 ## References
+- [[1]](https://gebakx.github.io/hs-dts/) Programming Languages (Fall 2020). [*Decision Trees*](https://gebakx.github.io/hs-dts/), FIB - UPC.
+- [[2]](https://archive.ics.uci.edu/ml/datasets/Mushroom) Jeff Schlimmer, 1981. [*Mushroom Data Set*](https://archive.ics.uci.edu/ml/datasets/Mushroom). [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/index.php).
+- [[3]](https://www.haskell.org/ghc/) [Glasgow Haskell Compiler (GHC)](https://www.haskell.org/ghc/).
+- [[4]](https://gebakx.github.io/ml/#35) Gerard Escudero, 2020, [*Machine Learning*](https://gebakx.github.io/ml/#35) (pages 35 to 40)
 
 
 ## To-do list
