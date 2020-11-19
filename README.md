@@ -197,7 +197,7 @@ Since this is not how the file that contains the data set is formatted (`agaricu
 - [[1]](https://gebakx.github.io/hs-dts/) Programming Languages (Fall 2020). [*Decision Trees*](https://gebakx.github.io/hs-dts/), FIB - UPC.
 - [[2]](https://archive.ics.uci.edu/ml/datasets/Mushroom) Jeff Schlimmer, 1981. [*Mushroom Data Set*](https://archive.ics.uci.edu/ml/datasets/Mushroom). [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/index.php).
 - [[3]](https://www.haskell.org/ghc/) [Glasgow Haskell Compiler (GHC)](https://www.haskell.org/ghc/).
-- [[4]](https://gebakx.github.io/ml/#35) Gerard Escudero, 2020, [*Machine Learning*](https://gebakx.github.io/ml/#35) (pages 35 to 40)
+- [[4]](https://gebakx.github.io/ml/#35) Gerard Escudero, 2020. [*Machine Learning*](https://gebakx.github.io/ml/#35) (pages 35 to 40)
 
 
 ## To-do list
