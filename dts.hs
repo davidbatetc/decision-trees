@@ -273,7 +273,6 @@ classifySpecimen (Node name list) = do
             ++ show val ++ " for attribute " ++ show name ++ " missing.")
         Just dt -> classifySpecimen dt
 
-
 -- | Given a decision tree, classifies a Specimen Char Char using user interaction.
 --
 -- >>> classifySpecimenCc (Node "name" [('P', Leaf 'A'), ('M', Leaf 'B')])
