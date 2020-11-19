@@ -14,17 +14,87 @@ wordsCustom sep s = case dropWhile (== sep) s of
     "" -> []
     s' -> w : wordsCustom sep s'' where (w, s'') = break (== sep) s'
 
+-- | Given a comparison function, runs merge sort on a given list.
+msortBy :: (Ord a) => (a -> a -> Ordering) -> [a] -> [a]
+msortBy _ [] = []
+msortBy comp ws = mergeAll (map (:[]) ws)
+  where
+    mergeAll [xs] = xs
+    mergeAll xss  = mergeAll (mergePairs xss)
+
+    mergePairs (xs:ys:zss) = merge xs ys : mergePairs zss
+    mergePairs xs          = xs
+
+    merge [] ms = ms
+    merge ns [] = ns
+    merge (n:ns) (m:ms)
+        | comp n m == LT   = n : merge ns (m:ms)
+        | otherwise        = m : merge (n:ns) ms
+
+-- | Auxiliary function for mgsortBy, which is defined below this function.
+-- Given a comparison function and two lists of pairs (repetitions, value)
+-- merges the two lists. The pairs which have the same value are merged into one.
+--
+-- Preconditions:
+-- 1. The values of the lists are sorted according to the comparison function.
+-- 2. In each of the lists, each value appears at most once.
+mergeGroup :: (Ord a) => (a -> a -> Ordering) -> [(Int, a)]
+    -> [(Int, a)] -> [(Int, a)]
+mergeGroup _ [] cxs = cxs
+mergeGroup _ cys [] = cys
+mergeGroup comp ((c1, x):cxs) ((c2, y):cys)
+    | compRes == EQ    = (c1 + c2, x) : mergeGroup comp cxs cys
+    | compRes == LT    = (c1, x) : mergeGroup comp cxs ((c2, y):cys)
+    | otherwise        = (c2, y) : mergeGroup comp ((c1, x):cxs) cys
+  where compRes = comp x y
+
+-- | Given a comparison function, orders a list using an adapted version of a
+-- merge sort. This version merges the repeated values of the list into one
+-- while counting its repetitions.
+--
+-- >>> mgsortBy compare [-1, -1, 2, -1, 4, 5, -1, 5, 4, 2, 5]
+-- [(4,-1),(2,2),(2,4),(3,5)]
+mgsortBy :: (Ord a) => (a -> a -> Ordering) -> [a] -> [(Int, a)]
+mgsortBy _ [] = []
+mgsortBy comp (w:ws) = mergeAll $ map (:[]) (initialGrouping ws w 1)
+  where
+    -- This function is thought for cases in which there are a lot of repeated
+    -- values in the initial list.
+    initialGrouping [] oldx counter = [(counter, oldx)]
+    initialGrouping (x:xs) oldx counter
+        | comp x oldx == EQ   = initialGrouping xs oldx (counter + 1)
+        | otherwise           = (counter, oldx) : initialGrouping xs x 1
+
+    mergeAll []    = []
+    mergeAll [cxs] = cxs
+    mergeAll cxss  = mergeAll (mergePairs cxss)
+    mergePairs (cxs:cys:czss) = mergeGroup comp cxs cys : mergePairs czss
+    mergePairs cxs            = cxs
+
+-- / Removes the nth element of a list. Equivalent to using
+-- (drop n . take (n + 1)) xs.
+removeNth :: [a] -> Int -> [a]
+removeNth xs n = removeNth' xs n 0
+  where
+    removeNth' [] _ _ = []
+    removeNth' (y:ys) m i
+      | i == n      = ys
+      | otherwise   = y : removeNth' ys m (i + 1)
+
+
+--------------------------------------------------------------------------------
+-- | DEFINITIONS, INSTANTIATIONS AND FUNCTIONS TO READ
+--------------------------------------------------------------------------------
+
 -- | Specimen encapsulates the concept of example to be fed into the decision
--- tree, while DT is the decision tree itself. Note that the class and the
+-- tree, while DT is the decision tree itself. Note that the classes and the
 -- values can be of any type.
 data Specimen a b = Specimen a [b]
 data DT a b = Leaf a | Node String [(b, DT a b)]
 
-
 -- Instantiation of Specimen as Show
 instance (Show a, Show b) => Show (Specimen a b) where
     show (Specimen x ys) = "\x1b[31;1mSpecimen\x1b[33;1m " ++ show x ++ " \x1b[0m" ++ show ys
-
 
 -- Instantiation of DT as Show
 instance (Show a, Show b) => Show (DT a b) where
@@ -34,8 +104,6 @@ instance (Show a, Show b) => Show (DT a b) where
             spaces n ++ "\x1b[32;1m" ++ show node ++ "\x1b[0m\n" ++ concatMap (show'' (n + 2)) list where
                 show'' m (branch, dt') = spaces m ++ "\x1b[33;1m" ++ show branch ++ "\x1b[0m\n" ++ show' (m + 2) dt'
 
-
-
 -- Reads a Specimen from a String, whose elements are separed by the character sep
 --  using the built-in read function. This means that Strings have to be given
 --  with \"\" and Chars with \'\'. This function is not used in the program, but
@@ -43,7 +111,6 @@ instance (Show a, Show b) => Show (DT a b) where
 readSpecimen :: (Read a, Read b) => Char -> String -> Specimen a b
 readSpecimen sep str = Specimen (read $ head splitStr) (map read (tail splitStr))
   where splitStr = wordsCustom sep str
-
 
 -- Reads a Specimen Char Char from a String, whose elements are separed by the
 --  character sep. Note that in this case "x,y,z" will give (Specimen x [y,z]),
@@ -58,51 +125,9 @@ readSpecimenCc sep str = Specimen (unpack $ head splitStr) (map unpack $ tail sp
                     --  giving unexpected behavior in other parts of the program.
 
 
-merge :: (Ord a) => (a -> a -> Ordering) -> [a] -> [a] -> [a]
-merge _ [] ms = ms
-merge _ ns [] = ns
-merge comp (n:ns) (m:ms)
-  | comp n m == LT  = n : merge comp ns (m:ms)
-  | otherwise       = m : merge comp (n:ns) ms
-
-
--- Given a comparison function, runs merge sort on a given list
-msortBy :: (Ord a) => (a -> a -> Ordering) -> [a] -> [a]
-msortBy _ [] = []
-msortBy comp ws = mergeAll (map (:[]) ws)
-  where
-    mergeAll [xs] = xs
-    mergeAll xss  = mergeAll (mergePairs xss)
-    mergePairs (xs:ys:zss) = merge comp xs ys : mergePairs zss
-    mergePairs xs          = xs
-
-
-mergeGroup :: (Ord a) => (a -> a -> Ordering) -> [(Int, a)]
-    -> [(Int, a)] -> [(Int, a)]
-mergeGroup _ [] cxs = cxs
-mergeGroup _ cys [] = cys
-mergeGroup comp ((c1, x):cxs) ((c2, y):cys)
-    | compRes == EQ   = (c1 + c2, x) : mergeGroup comp cxs cys
-    | compRes == LT   = (c1, x) : mergeGroup comp cxs ((c2, y):cys)
-    | otherwise        = (c2, y) : mergeGroup comp ((c1, x):cxs) cys
-  where compRes = comp x y
-
-
-mgsortBy :: (Ord a) => (a -> a -> Ordering) -> [a] -> [(Int, a)]
-mgsortBy _ [] = []
-mgsortBy comp (w:ws) = mergeAll $ map (:[]) (spanCount ws w 1)
-  where
-    spanCount [] oldx counter = [(counter, oldx)]
-    spanCount (x:xs) oldx counter
-        | comp x oldx == EQ   = spanCount xs oldx (counter + 1)
-        | otherwise           = (counter, oldx) : spanCount xs x 1
-
-    mergeAll []    = []
-    mergeAll [cxs] = cxs
-    mergeAll cxss  = mergeAll (mergePairs cxss)
-    mergePairs (cxs:cys:czss) = mergeGroup comp cxs cys : mergePairs czss
-    mergePairs cxs            = cxs
-
+--------------------------------------------------------------------------------
+-- | CONSTRUCTION OF THE DECISION TREE
+--------------------------------------------------------------------------------
 
 -- Creates a list in which every element is a pair that contains one of the
 --  attribute id's provided in 'unused', and a sublist made out of
@@ -128,7 +153,6 @@ createAppsList sps = createAppsList' attrsMat
         | val1 /= val2   = compare val1 val2
         | app1 /= app2   = compare app2 app1  -- Note the inversion
         | otherwise      = compare cl2 cl1    -- Note the inversion
-
 
 -- Chooses the best attribute
 chooseBestAttrId :: (Ord a, Ord b) => [[(Int, (b, a))]] -> Int
@@ -156,16 +180,6 @@ createBranchingList ((app, (val, cl)):zs)
 --  a list of specimens, along with the class itself
 findNCountClassMode :: (Ord a) => [Specimen a b] -> (Int, a)
 findNCountClassMode = maximum . mgsortBy compare . map (\(Specimen x _) -> x)
-
-
-removeNth :: [a] -> Int -> [a]
-removeNth xs n = removeNth' xs n 0
-  where
-    removeNth' [] _ _ = []
-    removeNth' (y:ys) m i
-      | i == n      = ys
-      | otherwise   = y : removeNth' ys m (i + 1)
-
 
 generateDT' :: (Ord a, Ord b) => [String] -> [Specimen a b] -> a -> Int -> DT a b
 generateDT' [] _ clMode' _ = Leaf clMode'
