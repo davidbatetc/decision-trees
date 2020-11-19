@@ -62,7 +62,7 @@ A tie can also happen when finding **which is the most common class** among the 
 
 
 #### Maximizing perfect accuracy
-The main objective of the first heuristic is to maximize the number of  specimens for which a prediction of the class can be made already at that point. In this way, it is hoped that the user will need to use less attributes in order to obtain their prediction. This is done by choosing the attribute which has more specimens for which the specimens with the same value of the attribute are all members of the same class. In this case, the prediction of the class in this point is perfectly accurate (according to the data set). An example is provided below.
+The main objective of the first heuristic is to maximize the number of  specimens for which a prediction of the class can be made already at that point. In this way, it is hoped that the user will need to use less attributes in order to obtain their prediction. This is done by choosing **the attribute which has more specimens for which the specimens with the same value of the attribute are all members of the same class**. In this case, the prediction of the class in this point is perfectly accurate (according to the data set). An example is provided below.
 
 ```haskell
 >>>> attrNames = ["cap-shape", "cap-color"]
