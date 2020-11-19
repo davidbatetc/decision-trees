@@ -6,6 +6,32 @@ The following document describes the approach followed to solve the problem pres
 We are tasked with creating a Haskell program that allows us to build a **decision tree** from a data set and then classify examples that are *not* part of the data set via user interaction. In particular, the program must be able to process the data set [*Mushroom*](https://archive.ics.uci.edu/ml/datasets/Mushroom), of the *UC Irvine Machine Learning Repository*. A broader description of the problem, along with the requirements of the assignment, can be found [**here**](https://gebakx.github.io/hs-dts/).
 
 
+
+
+## Usage
+There are mainly two ways to run this program. The first option is to **compile the program** and then run the compiled file. The second option is to run the program using an **interactive environment**. The [*Glasgow Haskell Compiler (GHC)*](https://www.haskell.org/ghc/) is recommended for both options. The following instructions have been tested in a Linux environment, and they might differ slightly in other operating systems.
+
+### Compiled version
+In order to run the compiled program we first have to compile it. This can be achieved by running the following command in a terminal once *ghc* has been installed.
+```bash
+$ ghc dts.hs
+```
+It is possible to compile the program using different options, which can be found running
+```bash
+$ ghc --help
+```
+Once the program has been compiled it can be run using
+```bash
+$ ./dts
+```
+
+### Interactive environment
+In order to run the program in the interactive environment of *ghc* we can use the command
+```bash
+$ ghci dts.hs
+```
+
+
 ## Construction of the decision tree
 The decision tree in this program is implemented using as a guideline the description in [[1] Gerard Escudero, 2020, *Machine Learning* (pages 35 to 40)](https://gebakx.github.io/ml/#35).
 
@@ -104,7 +130,7 @@ should produce analogous results.
 
 
 ## Classification
-Once compiled, what the program does is classify any mushroom based on the decision tree that has been previously built using the file `agaricus-lepiota.data`, extracted from the data set [*Mushroom*](https://archive.ics.uci.edu/ml/datasets/Mushroom). The user is asked to provide the values of different attributes in order to classify the specimen, whose set of values might not match any of the specimens in the data set. The following is an example of execution of the program.
+Once compiled and run, what the program does is classify any mushroom based on the decision tree that has been previously built using the file `agaricus-lepiota.data`, extracted from the data set [*Mushroom*](https://archive.ics.uci.edu/ml/datasets/Mushroom). The user is asked to provide the values of different attributes in order to classify the specimen, whose set of values might not match any of the specimens in the data set. The following is an example of execution of the program.
 
 ```bash
 $ ./dts
@@ -135,35 +161,39 @@ $ ./dts
 
 ## Further comments
 ### Output coloring
-In order to make the program more user-friendly, **ANSI color escape sequences** are used when displaying the content. While this is a nice feature for those running the program in an environment that supports these escape sequences, it might not look so good if that is not the case. Thus, it is recommended to run the program in an environment that offers support for these.
+In order to make the program more user-friendly, **ANSI color escape sequences** are used to be able to display different colors when showing the content. While this is a nice feature for those running the program in an environment that supports these escape sequences, it might not look so good if that is not the case. Thus, it is recommended to run the program in an environment that offers support for these.
 
 
 ### Generality of the program
+One of the initial intentions when creating this program was **to make it as general as possible**, meaning that the program could be used with different data sets without barely any changes. While this has been achieved for the most part, it has not been entirely possible due to the way in which the type `Char` is read in Haskell in comparison with other types such as `Int` or `Double`.
 
-
-
-## Usage
-There are mainly two ways to run this program. The first option is to **compile the program** and then run the compiled file. The second option is to run the program using an **interactive environment**. The [*Glasgow Haskell Compiler (GHC)*](https://www.haskell.org/ghc/) is recommended for both options. The following instructions have been tested in a Linux environment, and they might differ slightly in other operating systems.
-
-### Compiled version
-In order to run the compiled program we first have to compile it. This can be achieved by running the following command in a terminal once *ghc* has been installed.
-```bash
-$ ghc dts.hs
-```
-It is possible to compile the program using different options, which can be found running
-```bash
-$ ghc --help
-```
-Once the program has been compiled it can be run using
-```bash
-$ ./dts
+Take as an example the function `readSpecimen`, which creates a `Specimen` from a `String` whose content is separated by a given `Char`.
+```haskell
+readSpecimen :: (Read a, Read b) => Char -> String -> Specimen a b
+readSpecimen sep str = Specimen (read $ head splitStr) (map read (tail splitStr))
+  where splitStr = wordsCustom sep str
 ```
 
-### Interactive environment
-In order to run the program in the interactive environment of *ghc* we can use the command
-```bash
-$ ghci dts.hs
+Let us show the results of running this function with different arguments.
+```haskell
+>>>> readSpecimen ',' "1,2.34,4.57,3.698" :: Specimen Int Double
+Specimen 1 [2.34,4.57,3.698]
+>>>> readSpecimen ';' "3.4;(0,1);(1,3);(3,4)" :: Specimen Float (Int, Int)
+Specimen 3.4 [(0,1),(1,3),(3,4)]
+>>>> readSpecimen ',' "e,c,b,n" :: Specimen Char Char
+*** Exception: Prelude.read: no parse
 ```
+
+Note that in the last case we get an `Exception`. This happens because Haskell's `read` expects `Char`s to be surrounded by `'`. Therefore, if we want to use this function in this case, we have to rewrite the string as
+```haskell
+>>>> readSpecimen ',' "'e','c','b','n'" :: Specimen Char Char
+Specimen 'e' "cbn"
+```
+
+Since this is not how the file that contains the data set is formatted (`agaricus-lepiota.data`), a function `readSpecimenCc` is implemented *ad hoc* for this case. Despite the fact that functions such as `readSpecimen` are not used in the main part of the program, they are provided for the sake of generality.
+
+
+## References
 
 
 ## To-do list
