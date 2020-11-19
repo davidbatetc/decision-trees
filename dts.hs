@@ -119,10 +119,10 @@ createAppsList sps = createAppsList' attrsMat
       =   singleList (map head attrsMat') : createAppsList' (map tail attrsMat')
 
     singleList = msortBy customOrder . mgsortBy compare . flip zip cls
-    customOrder (app1, (val1, _)) (app2, (val2, _))
-        | val1 < val2                       = LT
-        | (val1 == val2) && (app1 >= app2)  = LT
-        | otherwise                         = GT
+    customOrder (app1, (val1, cl1)) (app2, (val2, cl2))
+        | val1 /= val2   = compare val1 val2
+        | app1 /= app2   = compare app2 app1  --Note the inversion
+        | otherwise      = compare cl2 cl1    --Note the inversion
 
 
 --Chooses the best attribute
