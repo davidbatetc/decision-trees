@@ -68,10 +68,11 @@ mgsortBy comp (w:ws) = mergeAll $ map (:[]) (initialGrouping ws w 1)
     mergeAll []    = []
     mergeAll [cxs] = cxs
     mergeAll cxss  = mergeAll (mergePairs cxss)
+
     mergePairs (cxs:cys:czss) = mergeGroup comp cxs cys : mergePairs czss
     mergePairs cxs            = cxs
 
--- / Removes the nth element of a list. Equivalent to using
+-- | Removes the nth element of a list. Equivalent to using
 -- (drop n . take (n + 1)) xs.
 removeNth :: [a] -> Int -> [a]
 removeNth xs n = removeNth' xs n 0
@@ -98,7 +99,8 @@ data DT a b = Leaf a | Node String [(b, DT a b)]
 -- >>> Specimen "a" [1, 2, 3]
 -- Specimen "a" [1,2,3]
 instance (Show a, Show b) => Show (Specimen a b) where
-    show (Specimen x ys) = "\x1b[31;1mSpecimen\x1b[33;1m " ++ show x ++ " \x1b[0m" ++ show ys
+    show (Specimen x ys)
+        = "\x1b[31;1mSpecimen\x1b[33;1m " ++ show x ++ " \x1b[0m" ++ show ys
 
 -- | DT is instantiated as Show and is displayed as a list with colors in which,
 -- using spaces, the children are shown more to the right than their parents .
@@ -112,55 +114,72 @@ instance (Show a, Show b) => Show (Specimen a b) where
 --       3
 --         'B'
 instance (Show a, Show b) => Show (DT a b) where
-    show = show' 0 where
-        show' n (Leaf leaf) = spaces n ++ show leaf ++ "\n"
-        show' n (Node node list) =
-            spaces n ++ "\x1b[32;1m" ++ show node ++ "\x1b[0m\n" ++ concatMap (show'' (n + 2)) list where
-                show'' m (branch, dt') = spaces m ++ "\x1b[33;1m" ++ show branch ++ "\x1b[0m\n" ++ show' (m + 2) dt'
+    show = show' 0
+      where
+        show' n (Leaf cl) = spaces n ++ show cl ++ "\n"
+        show' n (Node attr list) = spaces n ++ "\x1b[32;1m" ++ show attr
+            ++ "\x1b[0m\n" ++ concatMap (show'' (n + 2)) list
+        show'' m (val, dt') = spaces m ++ "\x1b[33;1m" ++ show val ++ "\x1b[0m\n"
+            ++ show' (m + 2) dt'
 
--- Reads a Specimen from a String, whose elements are separed by the character sep
---  using the built-in read function. This means that Strings have to be given
---  with \"\" and Chars with \'\'. This function is not used in the program, but
---  it is provided so as to show how a generalized Specimen would be read.
+-- | Reads a Specimen from a String, whose elements are separed by a given
+-- character 'sep', using the built-in 'read' function.
+--
+-- >>> readSpecimen ';' "1;2.34;4.57;3.698" :: Specimen Int Double
+-- Specimen 1 [2.34,4.57,3.698]
+-- >>> readSpecimen ',' "e,c,b,n" :: Specimen Char Char
+-- *** Exception: Prelude.read: no parse
+-- >>> readSpecimen ',' "'e','c','b','n'" :: Specimen Char Char
+-- Specimen 'e' "cbn"
+--
+-- Note: function not used in the main part of the program, but provided for the
+-- sake of generality.
 readSpecimen :: (Read a, Read b) => Char -> String -> Specimen a b
 readSpecimen sep str = Specimen (read $ head splitStr) (map read (tail splitStr))
   where splitStr = wordsCustom sep str
 
--- Reads a Specimen Char Char from a String, whose elements are separed by the
---  character sep. Note that in this case "x,y,z" will give (Specimen x [y,z]),
---  whereas with readSpecimen, in order to obtain the same result, we would have
---  to write readSpecimen "\'x\',\'y\',\'z\'" :: Specimen Char Char.
+-- | Reads a Specimen Char Char from a String, whose elements are separed by a
+-- given character 'sep'.
+--
+-- >>> readSpecimenCc ',' "e,c,b,n"
+-- Specimen 'e' "cbn"
 readSpecimenCc :: Char -> String -> Specimen Char Char
 readSpecimenCc sep str = Specimen (unpack $ head splitStr) (map unpack $ tail splitStr)
   where
     splitStr = wordsCustom sep str
     unpack [x] = x  -- We could have used head instead, but it would have matched
-                    --  Strings that don't have only one character, potentially
-                    --  giving unexpected behavior in other parts of the program.
+                    -- Strings that don't have only one character, potentially
+                    -- giving unexpected behavior in other parts of the program
+                    -- if there was a bug.
 
 
 --------------------------------------------------------------------------------
 -- | CONSTRUCTION OF THE DECISION TREE
 --------------------------------------------------------------------------------
 
--- | Creates a list in which every element is a pair that contains one of the
--- attribute id's provided in 'unused', and a sublist made out of
--- (appearances, (value, class)), where
--- 1. value: is one of the values of the attribute corresponding to the id.
--- 2. class: is one of the possible classes.
--- 3. appearances: is the number of appearances of the combination class-value
---   in the list of Specimens provided.
+-- | Creates a list of sublists with each sublist corresponding to one of the
+-- attributes. The sublists consist of tuples (appearances, (value, class)),
+-- where
+-- 1. value: is one of the values of the attribute associated with the sublist.
+-- 2. class: is the most common class among the Specimens with this value
+--  for the attribute.
+-- 3. appearances: is the number of appearances of the combination value-class
+--  in the list of Specimens provided.
+--
+-- Postcondition: each of the sublists is sorted according to the order defined
+-- in 'customOrder'.
 createAppsList :: (Ord a, Ord b) => [Specimen a b] -> [[(Int, (b, a))]]
-createAppsList sps = createAppsList' attrsMat
+createAppsList sps = createAppsList' valsMat
   where
     cls = map (\(Specimen cl _) -> cl) sps
-    attrsMat = map (\(Specimen _ attrs) -> attrs) sps
+    valsMat = map (\(Specimen _ vals) -> vals) sps
 
+    -- It goes column by column of the valsMat
     createAppsList' [] = []
-    createAppsList' attrsMat'
-      | null $ head attrsMat'   = []
+    createAppsList' valsMat'
+      | null $ head valsMat'   = []  -- If the end of valsMat' has been reached.
       | otherwise
-      =   singleList (map head attrsMat') : createAppsList' (map tail attrsMat')
+      =   singleList (map head valsMat') : createAppsList' (map tail valsMat')
 
     singleList = msortBy customOrder . mgsortBy compare . flip zip cls
     customOrder (app1, (val1, cl1)) (app2, (val2, cl2))
@@ -168,11 +187,12 @@ createAppsList sps = createAppsList' attrsMat
         | app1 /= app2   = compare app2 app1  -- Note the inversion
         | otherwise      = compare cl2 cl1    -- Note the inversion
 
--- Chooses the best attribute
+-- | Given the list resulting from using createAppsList, returns the index of
+-- the attribute that is considered the best.
 chooseBestAttrId :: (Ord a, Ord b) => [[(Int, (b, a))]] -> Int
 chooseBestAttrId ws = snd $ maximum $ zip (map countFirstApp ws) [0..length ws - 1]
   where
-    countFirstApp [] = (0, 0, 0) :: (Int, Int, Int)
+    countFirstApp [] = (0, 0, 0) :: (Int, Int, Int)  -- To resolve ambiguity.
     countFirstApp ((app, (val, _)):zs)
         | null zs'    = (app' + app, superAcc' + app, diffVals + 1)
         | otherwise   = (app' + app, superAcc', diffVals + 1)
@@ -180,21 +200,21 @@ chooseBestAttrId ws = snd $ maximum $ zip (map countFirstApp ws) [0..length ws -
         (zs', zs'') = span (\(_, (v, _)) -> v == val) zs
         (app', superAcc', diffVals) = countFirstApp zs''
 
-
--- Creates a list choosing only the information of the most common class
---  for each of the values
+-- | Given one of the sublists resulting from using createAppsList, returns a
+-- list selecting only the tuples that contain the most common class for each of
+-- the values.
 createBranchingList :: (Ord a, Ord b) => [(Int, (b, a))] -> [(Int, (b, a))]
 createBranchingList [] = []
 createBranchingList ((app, (val, cl)):zs)
     = (app, (val, cl)) : createBranchingList ys
   where ys = dropWhile (\(_, (v, _)) -> v == val) zs
 
-
--- Returns the number of appearances of the most commont class in
---  a list of specimens, along with the class itself
+-- | Given a list of Specimens, returns the number of appearances of the most
+-- commont class along with the class itself.
 findNCountClassMode :: (Ord a) => [Specimen a b] -> (Int, a)
 findNCountClassMode = maximum . mgsortBy compare . map (\(Specimen x _) -> x)
 
+-- | Auxiliary function for generateDT.
 generateDT' :: (Ord a, Ord b) => [String] -> [Specimen a b] -> a -> Int -> DT a b
 generateDT' [] _ clMode' _ = Leaf clMode'
 generateDT' attrNames sps' clMode' clModeCount'
@@ -203,6 +223,7 @@ generateDT' attrNames sps' clMode' clModeCount'
     =   Node (attrNames !! bestAttrId) (map newTree branchingList)
   where
     newTree (app, (val, cl)) = (val, generateDT' newAttrNames (cleanSps val) cl app)
+
     cleanSps val = removeVals $ filter (spMatchesVal val) sps'
     spMatchesVal val (Specimen _ ys) = (ys !! bestAttrId) == val
     removeVals = map (\(Specimen x ys) -> Specimen x (removeNth ys bestAttrId))
@@ -212,12 +233,36 @@ generateDT' attrNames sps' clMode' clModeCount'
     bestAttrId = chooseBestAttrId appsList
     appsList = createAppsList sps'
 
-
+-- | Given the names of the attributes of the Specimens and a list of Specimens,
+-- generates a decision tree.
 generateDT :: (Ord a, Ord b) => [String] -> [Specimen a b] -> DT a b
 generateDT attrNames sps = generateDT' attrNames sps clMode clModeCount
   where (clModeCount, clMode) = findNCountClassMode sps
 
 
+--------------------------------------------------------------------------------
+-- | CLASSIFICATION
+--------------------------------------------------------------------------------
+
+-- | Given a decision tree, classifies a Specimen using user interaction.
+--
+-- >>> classifySpecimen (Node "name" [('P', Leaf 1), ('M', Leaf 2)])
+-- <system> Which name?
+-- <user> P
+-- <system> *** Exception: Prelude.read: no parse
+--
+-- >>> classifySpecimen (Node "name" [('P', Leaf 1), ('M', Leaf 2)])
+-- <system> Which name?
+-- <user> 'P'
+-- <system> Right "Prediction: 1"
+--
+-- >>> classifySpecimen (Node "name" [('P', Leaf 1), ('M', Leaf 2)])
+-- <system> Which name?
+-- <user> 'F'
+-- <system> Left "ERROR. Value "'F'" for attribute "name" missing."
+--
+-- Note: function not used in the main part of the program, but provided for the
+-- sake of generality.
 classifySpecimen :: (Eq b, Show a, Read b) => DT a b -> IO (Either String String)
 classifySpecimen (Leaf cl)    = return $ Right ("\x1b[31;1mPrediction: \x1b[0m" ++ show cl)
 classifySpecimen (Node name list) = do
@@ -229,7 +274,17 @@ classifySpecimen (Node name list) = do
         Just dt -> classifySpecimen dt
 
 
--- Unfinished
+-- | Given a decision tree, classifies a Specimen Char Char using user interaction.
+--
+-- >>> classifySpecimenCc (Node "name" [('P', Leaf 'A'), ('M', Leaf 'B')])
+-- <system> Which name?
+-- <user> P
+-- <system> Right "Prediction: A"
+--
+-- >>> classifySpecimenCc (Node "name" [('P', Leaf 'A'), ('M', Leaf 'B')])
+-- <system> Which name?
+-- <user> F
+-- <system> Left "ERROR. Value "F" for attribute "name" missing."
 classifySpecimenCc :: DT Char Char -> IO (Either String String)
 classifySpecimenCc (Leaf cl) = return $ Right ("\x1b[31;1mPrediction: \x1b[0m" ++ [cl])
 classifySpecimenCc (Node name list) = do
