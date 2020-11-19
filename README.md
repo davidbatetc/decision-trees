@@ -36,8 +36,8 @@ The purpose of this definition is to encapsulate the concept of *example to be f
 
 ```haskell
 sps = [Specimen "edible" ["convex", "brown"], Specimen "poisonous" ["bell", "brown"]]
-attrs = ["cap-shape", "cap-color"]
-dt = generateDT attrs sps
+attrNames = ["cap-shape", "cap-color"]
+dt = generateDT attrNames sps
 ```
 
 Note that the types of the classes and the values of the attributes of the specimens need to be instances of the `Ord` class for this implementation of the construction of the decision tree. It would be possible, however, to implement it so that they only need to be instances of the `Eq` class.  
@@ -58,10 +58,25 @@ During the construction of the decision tree as described in [[1]](https://gebak
 
 This program includes **two heuristics** that choose the attribute considered to be the best when the decision procedure described in [[1]](https://gebakx.github.io/ml/#35) results in a draw. If the best attribute cannot be decided, the first heuristic is used. If this is still not enough to decide, then the second heuristic is used. In the case that even the second heuristic fails to decide, the attribute that comes the last in lexicographical order is chosen among those that are tied. <!-- I am not sure that this last sentence is true. I have to check the code and make sure about it!!! -->
 
-A tie can also happen when finding **which is the most common class** among the specimens that have the same value in a given attribute. For this case, the program does not include an heuristic. Instead, it chooses the greater class among those that are tied, according to the order associated to the type of the classes. <!-- Once again, I am not at all sure that this is true. I should really really check this out!!! --> 
+A tie can also happen when finding **which is the most common class** among the specimens that have the same value in a given attribute. For this case, the program does not include an heuristic. Instead, it chooses the greater class among those that are tied, according to the order associated to the type of the classes. <!-- Once again, I am not at all sure that this is true. I should really really check this out!!! -->
 
 
 #### Maximizing perfect accuracy
+The main objective of the first heuristic is to maximize the number of  specimens for which a prediction of the class can be made already at that point. In this way, it is hoped that the user will need to use less attributes in order to obtain their prediction. This is done by choosing the attribute which has more specimens for which the specimens with the same value of the attribute are all members of the same class. In this case, the prediction of the class in this point is perfectly accurate (according to the data set). An example is provided below.
+
+```haskell
+>>>> attrNames = ["cap-shape", "cap-color"]
+>>>> sps = [Specimen "edible" ["convex", "brown"], Specimen "poisonous" ["convex", "brown"], Specimen "edible" ["convex", "white"]]
+>>>> generateDT attrNames sps
+"cap-color"
+  "brown"
+    "cap-shape"
+      "convex"
+        "edible"
+  "white"
+    "edible"
+```
+
 
 #### Maximizing the number of values
 
