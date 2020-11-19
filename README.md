@@ -2,6 +2,25 @@
 The following document describes the approach followed to solve the problem presented in [*Decision Trees*](https://gebakx.github.io/hs-dts/), a Haskell programming project of the course *Programming Languages* (Fall semester, 2020), which is part of the course offer of the *Facultat d'Informàtica de Barcelona* (FIB - UPC).
 
 
+## Table of contents
+* [Short description](#short-description)
+* [Usage](#usage)
+  + [Compiled version](#compiled-version)
+  + [Interactive environment](#interactive-environment)
+* [Construction of the decision tree](#construction-of-the-decision-tree)
+  + [Definition of the decision tree](#definition-of-the-decision-tree)
+  + [Feeding data to the decision tree generator](#feeding-data-to-the-decision-tree-generator)
+  + [Short note on efficiency](#short-note-on-efficiency)
+  + [Heuristics](#heuristics)
+    - [Maximizing perfect accuracy](#maximizing-perfect-accuracy)
+    - [Maximizing the number of values](#maximizing-the-number-of-values)
+* [Classification](#classification)
+* [Further comments](#further-comments)
+  + [Output coloring](#output-coloring)
+  + [Generality of the program](#generality-of-the-program)
+* [References](#references)
+
+
 ## Short description
 We are tasked with creating a Haskell program that allows us to build a **decision tree** from a data set and then classify examples that are *not* part of the data set via user interaction. In particular, the program must be able to process the data set [*Mushroom*](https://archive.ics.uci.edu/ml/datasets/Mushroom), of the *UC Irvine Machine Learning Repository*. A broader description of the problem, along with the requirements of the assignment, can be found [**here**](https://gebakx.github.io/hs-dts/).
 
