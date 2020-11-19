@@ -199,6 +199,6 @@ Since this is not how the file that contains the data set is formatted (`agaricu
 -   [x] **Optimize** the construction of the decision tree.
 -   [x] Implement the best (subjective) **heuristic** for branching.
 -   [x] Implement **safety** with Maybe.
--   [ ] Write a proper README.md
+-   [x] Write a proper README.md
 -   [ ] Document the code with comments
 -   [ ] Delete To-do
