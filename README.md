@@ -73,9 +73,9 @@ Note that the types of the classes and the values of the attributes of the speci
 One of the most critical parts of building the decision tree in terms of efficiency is **measuring the accuracy** of each of the attributes in order to decide which is the best one at a given point. In this implementation, this is by done using an algorithm the relies heavily on sorting and grouping repetitions. Since this is the part of the algorithm that has the highest time complexity, it is important to optimize it as much as possible. For this reason, this program includes a **modified merge sort** that sorts a list of elements while counting repetitions. Let us provide a couple of examples:
 
 ```haskell
->>>> mgsortBy compare [-1, -1, 2, -1, 4, 5, -1, 5, 4, 2, 5]
+>>> mgsortBy compare [-1, -1, 2, -1, 4, 5, -1, 5, 4, 2, 5]
 [(4,-1),(2,2),(2,4),(3,5)]
->>>> mgsortBy (flip compare) ["brown", "yellow", "brown", "brown", "yellow", "pink"]
+>>> mgsortBy (flip compare) ["brown", "yellow", "brown", "brown", "yellow", "pink"]
 [(2,"yellow"),(1,"pink"),(3,"brown")]
 ```
 
@@ -91,9 +91,9 @@ A tie can also happen when finding **which is the most common class** among the 
 The main objective of the first heuristic is to maximize the number of  specimens for which a prediction of the class can be made already at that point. In this way, it is hoped that the user will need to use less attributes in order to obtain their prediction. This is done by choosing **the attribute which has more specimens for which the specimens with the same value of the attribute are all members of the same class**. In this case, the prediction of the class *in this point* is perfectly accurate (according to the data set). An example is provided below.
 
 ```haskell
->>>> attrNames = ["cap-shape", "cap-color"]
->>>> sps = [Specimen "edible" ["convex", "brown"], Specimen "poisonous" ["convex", "brown"], Specimen "edible" ["convex", "white"]]
->>>> generateDT attrNames sps
+>>> attrNames = ["cap-shape", "cap-color"]
+>>> sps = [Specimen "edible" ["convex", "brown"], Specimen "poisonous" ["convex", "brown"], Specimen "edible" ["convex", "white"]]
+>>> generateDT attrNames sps
 "cap-color"
   "brown"
     "cap-shape"
@@ -108,9 +108,9 @@ The main objective of the first heuristic is to maximize the number of  specimen
 This heuristic consists on choosing **the attribute which has more different values** at that point. The aim of this heuristic is once again to reduce the number of attributes that the user will need to use in order to obtain their prediction. Note that under the assumption that for each attribute, each value has approximately the same amount of specimens, the number of specimens in each of the subtrees arising from the choice of attribute will be less if the chosen attribute has more different values. The hope is that this results in trees which have a lower height. An example in which this heuristic is used is the following.
 
 ```haskell
->>>> attrNames = ["cap-shape", "cap-color"]
->>>> sps = [Specimen "edible" ["convex", "brown"], Specimen "edible" ["convex", "white"], Specimen "poisonous" ["bell", "pink"]]
->>>> generateDT attrNames sps
+>>> attrNames = ["cap-shape", "cap-color"]
+>>> sps = [Specimen "edible" ["convex", "brown"], Specimen "edible" ["convex", "white"], Specimen "poisonous" ["bell", "pink"]]
+>>> generateDT attrNames sps
 "cap-color"
   "brown"
     "edible"
@@ -168,17 +168,17 @@ readSpecimen sep str = Specimen (read $ head splitStr) (map read (tail splitStr)
 
 Let us show the results of running this function with different arguments.
 ```haskell
->>>> readSpecimen ',' "1,2.34,4.57,3.698" :: Specimen Int Double
+>>> readSpecimen ',' "1,2.34,4.57,3.698" :: Specimen Int Double
 Specimen 1 [2.34,4.57,3.698]
->>>> readSpecimen ';' "3.4;(0,1);(1,3);(3,4)" :: Specimen Float (Int, Int)
+>>> readSpecimen ';' "3.4;(0,1);(1,3);(3,4)" :: Specimen Float (Int, Int)
 Specimen 3.4 [(0,1),(1,3),(3,4)]
->>>> readSpecimen ',' "e,c,b,n" :: Specimen Char Char
+>>> readSpecimen ',' "e,c,b,n" :: Specimen Char Char
 *** Exception: Prelude.read: no parse
 ```
 
 Note that in the last case we get an `Exception`. This happens because Haskell's `read` expects `Char`s to be surrounded by `'`. Therefore, if we want to use this function in this case, we have to rewrite the string as
 ```haskell
->>>> readSpecimen ',' "'e','c','b','n'" :: Specimen Char Char
+>>> readSpecimen ',' "'e','c','b','n'" :: Specimen Char Char
 Specimen 'e' "cbn"
 ```
 
