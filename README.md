@@ -77,15 +77,20 @@ In order to build a decision tree, we need to know which **attributes** we will 
 data Specimen a b = Specimen a [b]
 ```
 
-The purpose of this definition is to encapsulate the concept of *example to be feeded to the decision tree*, in an attempt to make the code easier to read. Once again, this definition is given in a generalized way. We can then generate a decision tree in the following way.
+The purpose of this definition is to encapsulate the concept of *example to be feeded to the decision tree*, in an attempt to make the code easier to read. In this definition, `a` is the type of the class of the `Specimen` and `b` is the type of the values of each attribute of the `Specimen`. Once again, this definition is given in a generalized way. We can then generate a decision tree in the following way.
 
 ```haskell
-sps = [Specimen "edible" ["convex", "brown"], Specimen "poisonous" ["bell", "brown"]]
-attrNames = ["cap-shape", "cap-color"]
-dt = generateDT attrNames sps
+>>> sps = [Specimen "edible" ["convex", "brown"], Specimen "poisonous" ["bell", "brown"]]
+>>> attrNames = ["cap-shape", "cap-color"]
+>>> generateDT attrNames sps
+"cap-shape"
+  "bell"
+    "poisonous"
+  "convex"
+    "edible"
 ```
 
-Note that the types of the classes and the values of the attributes of the specimens need to be instances of the `Ord` class for this implementation of the construction of the decision tree. It would be possible, however, to implement it so that they only need to be instances of the `Eq` class.  
+It is important to mention that the types of the classes and the values of the attributes of the specimens need to be instances of the `Ord` class for this implementation of the construction of the decision tree. It would be possible, however, to implement it so that they only need to be instances of the `Eq` class.  
 
 
 ### Short note on efficiency
