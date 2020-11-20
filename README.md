@@ -61,17 +61,17 @@ Following Haskell's philosophy, the decision tree is defined *in a generalized w
 data DT a b = Leaf a | Node String [(b, DT a b)]
 ```
 
-As a consequence, both the classes and the values can be of any given type. Note that this is a recursive definition. A decision tree can either be a **leaf**, or a **node** whose children are decision trees which are accessed via values of an attribute. Hence, it is possible to define, for example,
+As a consequence, both the classes and the values can be of any given type. Note that this is a recursive definition. A decision tree can either be a `Leaf`, or a `Node` whose children are decision trees which are accessed via values of an attribute. Each `Leaf` corresponds to predictions, while each `Node` corresponds to an attribute that will be used in order to advance deeper in the decision tree in order to make a prediction. With this definition of decision tree, it is possible to define, for example,
 
 ```haskell
-dt = Node "Attribute 1" [(100, Node "Attribute 2" [(55, Leaf 67.54)])]
+dt = Node "Attribute 1" [(100, Node "Attribute 2" [(55, Leaf 67.54), (40, Leaf 43.23)])]
 ```
 
 An interesting observation to make is the fact that the base case of the decision tree is not an empty tree, but a tree which only consists of a leaf.
 
 
 ### Feeding data to the decision tree generator
-In order to build a decision tree, we need to know which **attributes** we will consider, as well as the **values** of these attributes for different examples. Using the mushrooms as an analogy, the following data type is defined.
+In order to build a decision tree, we need to know which **attributes** we will consider, as well as the **values** of these attributes for different examples. For each example, we also need to know the **class** that the example belongs to. Using the mushrooms as an analogy, the following data type is defined.
 
 ```haskell
 data Specimen a b = Specimen a [b]
