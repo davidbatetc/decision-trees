@@ -59,7 +59,7 @@ mgsortBy _ [] = []
 mgsortBy comp (w:ws) = mergeAll $ map (:[]) (initialGrouping ws w 1)
   where
     -- This function is thought for cases in which there are a lot of repeated
-    -- values in the initial list.
+    -- consecutive values in the initial list.
     initialGrouping [] oldx counter = [(counter, oldx)]
     initialGrouping (x:xs) oldx counter
         | comp x oldx == EQ   = initialGrouping xs oldx (counter + 1)
@@ -162,9 +162,10 @@ readSpecimenCc sep str = Specimen (unpack $ head splitStr) (map unpack $ tail sp
 -- where
 -- 1. value: is one of the values of the attribute associated with the sublist.
 -- 2. class: is the most common class among the Specimens with this value
---  for the attribute.
--- 3. appearances: is the number of appearances of the combination value-class
---  in the list of Specimens provided.
+--  for the attribute (in case of draw, the greater class according to 'compare'
+--  is chosen among those tied).
+-- 3. appearances: is the number of appearances (repetitions) of the combination
+--  value-class in the list of Specimens provided.
 --
 -- Postcondition: each of the sublists is sorted according to the order defined
 -- in 'customOrder'.
@@ -210,7 +211,8 @@ createBranchingList ((app, (val, cl)):zs)
   where ys = dropWhile (\(_, (v, _)) -> v == val) zs
 
 -- | Given a list of Specimens, returns the number of appearances of the most
--- commont class along with the class itself.
+-- common class along with the class itself (in case of draw, the greater class
+-- according to 'compare' is chosen among those tied).
 findNCountClassMode :: (Ord a) => [Specimen a b] -> (Int, a)
 findNCountClassMode = maximum . mgsortBy compare . map (\(Specimen x _) -> x)
 
@@ -220,9 +222,9 @@ generateDT' [] _ clMode' _ = Leaf clMode'
 generateDT' attrNames sps' clMode' clModeCount'
     | length sps' == clModeCount'   = Leaf clMode'
     | otherwise
-    =   Node (attrNames !! bestAttrId) (map newTree branchingList)
+    =   Node (attrNames !! bestAttrId) (map newDT branchingList)
   where
-    newTree (app, (val, cl)) = (val, generateDT' newAttrNames (cleanSps val) cl app)
+    newDT (app, (val, cl)) = (val, generateDT' newAttrNames (cleanSps val) cl app)
 
     cleanSps val = removeVals $ filter (spMatchesVal val) sps'
     spMatchesVal val (Specimen _ ys) = (ys !! bestAttrId) == val
@@ -303,8 +305,8 @@ classifySpecimenCc (Node name list) = do
 -- Note: function not used in the main program but left for convenience. A
 -- function that shows the decision tree corresponding to data sets with
 -- different types for the classes and the values can be created analogously.
-showTree :: String -> IO (DT Char Char)
-showTree fileName = do
+showDT :: String -> IO (DT Char Char)
+showDT fileName = do
     content <- readFile fileName
     return $ readSpecimenCcList content
   where
