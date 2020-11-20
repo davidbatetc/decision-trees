@@ -10,7 +10,6 @@ The following document describes the approach followed to solve the problem pres
 * [Construction of the decision tree](#construction-of-the-decision-tree)
   + [Definition of the decision tree](#definition-of-the-decision-tree)
   + [Feeding data to the decision tree generator](#feeding-data-to-the-decision-tree-generator)
-  + [Short note on efficiency](#short-note-on-efficiency)
   + [Heuristics](#heuristics)
     - [Maximizing perfect accuracy](#maximizing-perfect-accuracy)
     - [Maximizing the number of values](#maximizing-the-number-of-values)
@@ -18,6 +17,7 @@ The following document describes the approach followed to solve the problem pres
 * [Further comments](#further-comments)
   + [Output coloring](#output-coloring)
   + [Generality of the program](#generality-of-the-program)
+  + [Short note on efficiency](#short-note-on-efficiency)
 * [References](#references)
 
 
@@ -92,16 +92,6 @@ The purpose of this definition is to encapsulate the concept of *example to be f
 
 It is important to mention that the types of the classes and the values of the attributes of the specimens need to be instances of the `Ord` class for this implementation of the construction of the decision tree. It would be possible, however, to implement it so that they only need to be instances of the `Eq` class.  
 
-
-### Short note on efficiency
-One of the most critical parts of building the decision tree in terms of efficiency is **measuring the accuracy** of each of the attributes in order to decide which is the best one at a given point. In this implementation, this is by done using an algorithm the relies heavily on sorting and grouping repetitions. Since this is the part of the algorithm that has the highest time complexity, it is important to optimize it as much as possible. For this reason, this program includes a **modified merge sort** that sorts a list of elements while counting repetitions. Let us provide a couple of examples:
-
-```haskell
->>> mgsortBy compare [-1, -1, 2, -1, 4, 5, -1, 5, 4, 2, 5]
-[(4,-1),(2,2),(2,4),(3,5)]
->>> mgsortBy (flip compare) ["brown", "yellow", "brown", "brown", "yellow", "pink"]
-[(2,"yellow"),(1,"pink"),(3,"brown")]
-```
 
 ### Heuristics
 During the construction of the decision tree as described in [[4]](https://gebakx.github.io/ml/#35), we might encounter situations in which we cannot immediately decide **which is the best attribute**. What we can do when this happens is use heuristics to choose the attribute which we think will be more convenient.
@@ -207,6 +197,17 @@ Specimen 'e' "cbn"
 ```
 
 Since this is not how the file that contains the data set is formatted (`agaricus-lepiota.data`), a function `readSpecimenCc` is implemented *ad hoc* for this case. Despite the fact that functions such as `readSpecimen` are not used in the main part of the program, they are provided for the sake of generality.
+
+
+### Short note on efficiency
+One of the most critical parts of building the decision tree in terms of efficiency is **measuring the accuracy** of each of the attributes in order to decide which is the best one at a given point. In this implementation, this is by done using an algorithm the relies heavily on sorting and grouping repetitions. Since this is the part of the algorithm that has the highest time complexity, it is important to optimize it as much as possible. For this reason, this program includes a **modified merge sort** that sorts a list of elements while counting repetitions. Let us provide a couple of examples:
+
+```haskell
+>>> mgsortBy compare [-1, -1, 2, -1, 4, 5, -1, 5, 4, 2, 5]
+[(4,-1),(2,2),(2,4),(3,5)]
+>>> mgsortBy (flip compare) ["brown", "yellow", "brown", "brown", "yellow", "pink"]
+[(2,"yellow"),(1,"pink"),(3,"brown")]
+```
 
 
 ## References
