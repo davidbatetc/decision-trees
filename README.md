@@ -96,13 +96,13 @@ It is important to mention that the types of the classes and the values of the a
 ### Heuristics
 During the construction of the decision tree as described in [[4]](https://gebakx.github.io/ml/#35), we might encounter situations in which we cannot immediately decide **which is the best attribute**. What we can do when this happens is use heuristics to choose the attribute which we think will be more convenient.
 
-This program includes **two heuristics** that choose the attribute considered to be the best when the decision procedure described in [[4]](https://gebakx.github.io/ml/#35) results in a draw. If the best attribute cannot be decided, the first heuristic is used. If this is still not enough to decide, then the second heuristic is used. In the case that even the second heuristic fails to decide, the attribute with the greatest index is chosen among those that are tied.
+This program includes **two heuristics** that choose the attribute considered to be the best when the decision procedure described in [[4]](https://gebakx.github.io/ml/#35) results in a draw. If the best attribute cannot be decided, the first heuristic is used. If this is still not enough to decide, then the second heuristic is used. In the case that even the second heuristic fails to decide, the attribute with the greatest index in the list of attributes is chosen among those that are tied.
 
-A tie can also happen when finding **which is the most common class** among the specimens that have the same value in a given attribute. For this case, the program does not include an heuristic. Instead, it chooses the greater class among those that are tied, according to the order associated to the type of the classes.
+A draw can also happen when finding **which is the most common class** among the specimens that have the same value in a given attribute. For this case, the program does not include an heuristic. Instead, it chooses the greater class among those that are tied, according to the order associated to the type of the classes.
 
 
 #### Maximizing perfect accuracy
-The main objective of the first heuristic is to maximize the number of  specimens for which a prediction of the class can be made already at that point. In this way, it is hoped that the user will need to use less attributes in order to obtain their prediction. This is done by choosing **the attribute which has more specimens for which the specimens with the same value of the attribute are all members of the same class**. In this case, the prediction of the class *in this point* is perfectly accurate (according to the data set). An example is provided below.
+The main objective of the first heuristic is to maximize the number of  specimens for which a prediction of the class can be made already at that point. In this way, it is hoped that the user will need to use less attributes in order to obtain their prediction. This is done by choosing **the attribute which has more specimens for which the specimens with the same value of the attribute are all members of the same class**. For these specimens, the prediction of the class *at this point* is perfectly accurate (according to the data set). An example is provided below.
 
 ```haskell
 >>> attrNames = ["cap-shape", "cap-color"]
